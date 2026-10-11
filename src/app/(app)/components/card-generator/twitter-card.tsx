@@ -26,7 +26,9 @@ export const TwitterCard: React.FC<TwitterCardProps> = ({ xConfig, backgroundSty
                         </div>
                     ))
                 }
-                {/* Watermark intentionally disabled for the self-hosted build. */}
+                {cardStyles.watermark?.enabled && cardStyles.watermark?.text && (
+                    <Watermark text={cardStyles.watermark.text} />
+                )}
             </div>
         )
     }, [backgroundStyles, xConfig, cardStyles]);
@@ -176,8 +178,17 @@ const CardLogo = ({ xConfig }) => {
     )
 }
 
-const Watermark = () => {
-
+const Watermark = ({ text }: { text: string }) => {
+    return (
+        <div className="flex justify-end" style={{ paddingTop: '0.75em', paddingRight: '0.25em' }}>
+            <span
+                className="whitespace-nowrap text-secondary-foreground select-none"
+                style={{ fontSize: '0.85em', fontWeight: 500, opacity: 0.55 }}
+            >
+                {text}
+            </span>
+        </div>
+    )
 }
 
 const CardBody: React.FC<{

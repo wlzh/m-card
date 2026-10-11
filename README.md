@@ -50,6 +50,24 @@ X is a source of information for many platforms，So this project came into bein
 ## Changelog
 
 <details>
+<summary><strong>v0.2.0</strong></summary>
+
+* Watermark: toggle it and customize the watermark text in the panel (defaults to `@wlzh`, on by default); exports include it.
+* Persistent settings: every panel value (width, padding, background, watermark, etc.) is remembered locally — no more re-configuring after a refresh.
+* Save as Default / Load Default buttons to snapshot and restore your personal defaults; Reset restores factory defaults.
+* Performance: debounced persistence writes, so dragging sliders no longer writes to storage on every tick.
+
+</details>
+
+<details>
+<summary><strong>v0.1.0</strong></summary>
+
+* Self-hosted build rebranded as M.Card, deployable to Cloudflare Pages with a custom domain (mcard.wlz.si).
+* Updated community links (X / Discord).
+
+</details>
+
+<details>
 <summary><strong>v0.0.3</strong></summary>
 
 * Performance Optimization: Utilized web workers for image generation, addressing issues with blank spaces on X.com after scrolling down.
@@ -100,6 +118,10 @@ X is a source of information for many platforms，So this project came into bein
 - Introduced customization for card background color.
 
 - Customizable card width.
+
+- Watermark support: on by default with customizable text, remembered locally.
+
+- All panel settings persist locally, with personal defaults you can save and restore.
 
 - Improved: Now clicking defaults to copying the image, rather than downloading the image.
 

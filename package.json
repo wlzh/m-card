@@ -1,7 +1,7 @@
 {
   "name": "m-card",
   "displayName": "M.Card",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Self-hosted Chrome extension for exporting X posts as cards and portable data.",
   "packageManager": "pnpm@9.15.4",
   "keywords": [
@@ -20,7 +20,8 @@
     "build:next": "next build",
     "package": "plasmo package",
     "typecheck": "tsc --noEmit",
-    "deploy:pages": "wrangler pages deploy out"
+    "deploy:pages": "wrangler pages deploy out",
+    "deploy:pages:local": "sh -c 'set -a && . ./.env.local && set +a && wrangler pages deploy out'"
   },
   "dependencies": {
     "@csstools/convert-colors": "^2.0.0",

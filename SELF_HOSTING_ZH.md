@@ -38,6 +38,37 @@ pnpm deploy:pages --project-name m-card
 
 首次发布后，将真实 `pages.dev` 地址写入上面两个环境变量，重新构建站点和扩展并再发布。自定义域名可在 Pages 控制台绑定，绑定后同样要重新构建扩展。
 
+## 部署凭证（仅存本机，不入库）
+
+Wrangler 部署需要 Cloudflare 凭证。项目使用 `.env.local` 保存（已被 `.gitignore` 的 `.env*.local` 规则排除，**不会提交到 GitHub**）：
+
+```bash
+# .env.local 内容
+CLOUDFLARE_ACCOUNT_ID=<你的账户 ID>
+CLOUDFLARE_API_TOKEN=<需要 Pages:Edit 权限的 API Token>
+```
+
+填充后，用封装好的脚本一键部署（自动加载 `.env.local`）：
+
+```bash
+pnpm deploy:pages:local
+```
+
+等价的手动方式：
+
+```bash
+set -a; source .env.local; set +a
+npx wrangler pages deploy out
+```
+
+验证线上效果（绕过本地代理 DNS 缓存）：
+
+```bash
+curl --noproxy '*' -sS -L https://mcard.wlz.si/ | head -n 5
+```
+
+> 提示：`.env.local` 属于本机私有文件，换机器部署时需要重新创建；仓库里的 `.env.example` 是公开变量的模板，不要把真实 Token 写进去。
+
 ## Chrome 安装
 
 1. 打开 `chrome://extensions` 并启用开发者模式。

@@ -8,9 +8,12 @@ import { Button } from "@components/ui/button";
 import { InputController } from "./controller/input-controller";
 import { SaveAsTemplateButton } from "../save-as-template-button";
 import { CardController } from "./controller/card-controller";
+import { WatermarkController } from "./controller/watermark-controller";
 
 export const CardGenerator = () => {
     const resetAll = useCardStore((state) => state.resetAll);
+    const saveAsDefault = useCardStore((state) => state.saveAsDefault);
+    const loadDefault = useCardStore((state) => state.loadDefault);
 
     return (
 
@@ -19,6 +22,8 @@ export const CardGenerator = () => {
             <div className="flex-1 min-w-[320px]  h-[578px] px-4 pb-4 overflow-auto  sm:block hidden ">
                 <div className="py-2 flex gap-x-2">
                     <Button onClick={() => resetAll()} size="sm" variant="secondary">Reset</Button>
+                    <Button onClick={() => saveAsDefault()} size="sm" variant="secondary">Save as Default</Button>
+                    <Button onClick={() => loadDefault()} size="sm" variant="secondary">Load Default</Button>
                     <SaveAsTemplateButton></SaveAsTemplateButton>
 
                 </div>
@@ -27,6 +32,7 @@ export const CardGenerator = () => {
                     <InputController></InputController>
                     <BackgroundController></BackgroundController>
 
+                    <WatermarkController></WatermarkController>
                     <CardController></CardController>
                     <FontController></FontController>
                 </Accordion>

@@ -50,6 +50,25 @@ X是许多平台的信息来源，因此产生了这个项目。
 ## Changelog
 
 <details>
+<summary><strong>v0.2.0</strong></summary>
+
+- 新增水印功能：面板可开关水印、自定义水印文字（默认 `@wlzh`），导出图片自带水印。
+- 所有面板设置（宽度、内边距、背景、水印等）自动保存在本机，刷新后不再丢失。
+- 新增「Save as Default / Load Default」：一键保存、恢复个人默认设置；Reset 恢复出厂默认。
+- 性能优化：设置写入做防抖处理，拖动滑块不再频繁落盘。
+
+</details>
+
+<details>
+<summary><strong>v0.1.0</strong></summary>
+
+- 自托管化，品牌更名为 M.Card。
+- 支持部署到 Cloudflare Pages 自定义域名（mcard.wlz.si）。
+- 社区链接更新（X / Discord）。
+
+</details>
+
+<details>
 <summary><strong>v0.0.3</strong></summary>
 
 - 优化性能，使用web worker生成图片， 处理下拉后x.com空白问题。
@@ -87,6 +106,8 @@ X是许多平台的信息来源，因此产生了这个项目。
 - 轻松获取视频、图片、文字、点赞和浏览历史。
 - 支持多种格式导出，包括JSON、Markdown、PNG、JPEG和SVG。
 - 模板功能，保存您经常使用的卡片样式。
+- 水印功能，默认开启、文字可自定义，本机记住您的选择。
+- 全部面板设置本机自动记忆，支持保存与恢复个人默认值。
 
 <br/>
 
