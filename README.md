@@ -123,6 +123,8 @@ X is a source of information for many platforms，So this project came into bein
 
 - All panel settings persist locally, with personal defaults you can save and restore.
 
+- The x.com generation panel opens pre-loaded with your defaults; in-panel tweaks apply to that export only.
+
 - Improved: Now clicking defaults to copying the image, rather than downloading the image.
 
 - Fixed the issue of unable to fetch cover image for videos.
