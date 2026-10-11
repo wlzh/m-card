@@ -12,6 +12,14 @@ export async function generateStaticParams() {
     return [{ slug: 'independent' }]
 }
 
+// 生成期间的设置快照（模块级：并发生成时复用第一份，见消息处理逻辑）
+let pendingGenerationSnapshot: {
+    colorIndex: number,
+    backgroundStyles: any,
+    cardStyles: any,
+    tabConfig: any,
+} | null = null;
+
 const Index = () => {
 
     useEffect(() => {
@@ -26,6 +34,20 @@ const Index = () => {
                 }
                 const { tweetInfo, cardConfig } = body;
                 useCardStore.getState().setXConfig(tweetInfo)
+
+                // 快照面板设置：生成时临时套用扩展传来的参数（padding/fontSize 等），
+                // 生成完成后恢复，避免这些临时值写回 IndexedDB 冲掉用户保存的默认值。
+                // 想改默认值请在面板里改并 Save as Default —— 那是唯一的事实来源。
+                // 快照挂在模块级：并发生成时复用第一份（用户默认值），防止把覆盖值快照进去
+                if (!pendingGenerationSnapshot) {
+                    const storeBeforeGeneration = useCardStore.getState();
+                    pendingGenerationSnapshot = JSON.parse(JSON.stringify({
+                        colorIndex: storeBeforeGeneration.colorIndex,
+                        backgroundStyles: storeBeforeGeneration.backgroundStyles,
+                        cardStyles: storeBeforeGeneration.cardStyles,
+                        tabConfig: storeBeforeGeneration.tabConfig,
+                    }));
+                }
 
                 if (cardConfig?.colorIndex) {
                     useCardStore.getState().setColorIndex(cardConfig.colorIndex);
@@ -88,6 +110,12 @@ const Index = () => {
                             action: actionName,
                             value: { error: error instanceof Error ? error.message : 'Card generation failed' }
                         }, event.origin);
+                    } finally {
+                        // 图片已生成完毕（DOM 截图结束），恢复面板默认设置
+                        if (pendingGenerationSnapshot) {
+                            useCardStore.setState(pendingGenerationSnapshot);
+                            pendingGenerationSnapshot = null;
+                        }
                     }
                 });
             }
