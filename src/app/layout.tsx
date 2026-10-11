@@ -4,16 +4,18 @@ import './globals.css'
 import { siteConfig } from "@src/config/site";
 
 export const metadata = {
+  metadataBase: new URL(siteConfig.url),
   title: siteConfig.name,
   description: siteConfig.description,
   keywords: siteConfig.keywords,
   authors: siteConfig.authors,
   creator: siteConfig.creator,
-  themeColor: siteConfig.themeColor,
-  icons: siteConfig.icons,
-  // metadataBase: siteConfig.metadataBase,
   openGraph: siteConfig.openGraph,
   twitter: siteConfig.twitter,
+};
+
+export const viewport = {
+  themeColor: siteConfig.themeColor,
 };
 
 
@@ -26,35 +28,9 @@ export default function RootLayout({
 }) {
 
 
-  const getClarityAnalyticsTag = () => {
-    return {
-      __html: `
-       (function(c,l,a,r,i,t,y){
-        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-    })(window, document, "clarity", "script", "nn68ny4psp");`,
-    }
-  }
-
-  const getGoogleAnalyticsTag = () => {
-    return {
-      __html: `
-      window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-18KTPX8NV1');
-      `,
-    }
-  }
-
-
   return (
     <html lang="en">
       <head>
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-18KTPX8NV1"></script>
-        <script dangerouslySetInnerHTML={getGoogleAnalyticsTag()} />
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>{metadata.title}</title>
@@ -69,8 +45,6 @@ export default function RootLayout({
           duration={2000}
         />
       </body>
-      {/* <Analytics /> */}
-      <script dangerouslySetInnerHTML={getClarityAnalyticsTag()} />
     </html>
   )
 }

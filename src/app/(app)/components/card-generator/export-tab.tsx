@@ -1,7 +1,7 @@
 import { AccordionContent, AccordionItem, AccordionTrigger } from "@components/ui/accordion";
 
 import { Button } from "@components/ui/button";
-import { exportImage } from "@src/app/utils/export";
+import { exportImage } from "@src/app/utils/image";
 export const ExportTab = () => {
 
 

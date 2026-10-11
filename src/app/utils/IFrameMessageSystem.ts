@@ -1,6 +1,8 @@
 type MessageCallback = (value: any) => void;
 
 interface MessageEvent {
+  origin: string;
+  source: MessageEventSource | null;
   data: {
     action: string;
     value: any;
@@ -9,6 +11,8 @@ interface MessageEvent {
 
 class IFrameMessageSystem {
   private subscribers: Map<string, Set<MessageCallback>>;
+  private trustedOrigins = new Set<string>();
+  private trustedSources = new Set<MessageEventSource>();
 
   constructor() {
     this.subscribers = new Map();
@@ -41,19 +45,31 @@ class IFrameMessageSystem {
       const responseHandler = (response: any) => {
         clearTimeout(timeoutId);
         unsubscribe();
+        if (response?.error) {
+          reject(new Error(response.error));
+          return;
+        }
         resolve(response);
       };
 
       const unsubscribe = this.subscribe(responseAction, responseHandler);
 
+      const targetOrigin = new URL(iframe.src).origin;
+      if (iframe.contentWindow) {
+        this.trustedOrigins.add(targetOrigin);
+        this.trustedSources.add(iframe.contentWindow);
+      }
       iframe.contentWindow?.postMessage({
         action,
         body: data
-      }, '*');
+      }, targetOrigin);
     });
   }
 
   private handleMessage(event: MessageEvent): void {
+    if (!event.source || !this.trustedSources.has(event.source) || !this.trustedOrigins.has(event.origin)) {
+      return;
+    }
     const { action, value } = event.data;
     if (this.subscribers.has(action)) {
       this.subscribers.get(action)!.forEach(callback => callback(value));

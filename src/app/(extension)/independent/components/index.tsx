@@ -15,11 +15,10 @@ export async function generateStaticParams() {
 const Index = () => {
 
     useEffect(() => {
-        const fn = async (event) => {
-            // if (event.origin !== 'https://x-cards.net') return;
+        const fn = async (event: MessageEvent) => {
+            if (event.origin !== 'https://x.com' || event.source !== window.parent) return;
             const actionName = 'generate-card-local'
-            if (event.data.action === actionName) {
-                console.log('收到消息来自', event.data, event.origin);
+            if (event.data?.action === actionName && event.data?.body) {
 
                 const body = event.data.body as {
                     tweetInfo: XConfig[],
@@ -41,7 +40,7 @@ const Index = () => {
                 if (cardConfig.fontSize
                 ) {
                     useCardStore.getState().updateCardStyles({
-                        fontSize: cardConfig.fontSize,
+                            fontSize: cardConfig.fontSize as unknown as number,
                         fontFamily: cardConfig.fontFamily || 'Inter'
                     });
                 }
@@ -74,17 +73,20 @@ const Index = () => {
                 // }
 
                 requestAnimationFrame(async () => {
-                    const dataUrl = await generateImage({
-                        data: tweetInfo,
-                        format: cardConfig?.format || 'png',
-                        scale: cardConfig?.scale || 2,
-                        fontFamily: cardConfig.fontFamily || false,
-                    });
-                    if (event.source && event.source.postMessage) {
-                        event.source.postMessage({
-                            action: 'generate-card-local', value: {
-                                dataUrl: dataUrl
-                            }
+                    try {
+                        const dataUrl = await generateImage({
+                            format: cardConfig?.format || 'png',
+                            scale: cardConfig?.scale || 2,
+                            fontFamily: cardConfig.fontFamily || false,
+                        });
+                        (event.source as Window)?.postMessage({
+                            action: actionName,
+                            value: { dataUrl }
+                        }, event.origin);
+                    } catch (error) {
+                        (event.source as Window)?.postMessage({
+                            action: actionName,
+                            value: { error: error instanceof Error ? error.message : 'Card generation failed' }
                         }, event.origin);
                     }
                 });

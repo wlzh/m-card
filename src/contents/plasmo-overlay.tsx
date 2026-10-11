@@ -4,7 +4,6 @@ import type { PlasmoCSConfig, PlasmoCSUIProps, PlasmoRender } from "plasmo"
 import cssText from "data-text:@src/contents/plasmo-overlay.css"
 import { Toaster } from 'react-hot-toast';
 import { iframeMessageSystem } from '@src/app/utils/IFrameMessageSystem';
-import { sendToBackground } from '@plasmohq/messaging';
 import { useTweetsStore } from '@src/components/extension/use-tweet-collection';
 import { createRoot } from 'react-dom/client';
 export const config: PlasmoCSConfig = {
@@ -24,10 +23,7 @@ export const getShadowHostId = () => "x-cards-overlay"
 
 const AnchorOverlay: React.FC<PlasmoCSUIProps> = ({ anchor }) => {
     const iframeRef = useRef<HTMLIFrameElement>(null)
-    const setIsActivated = useTweetsStore((state) => state.setIsActivated);
-
-    const websiteURL = "https://x-cards.net/independent";
-    // const websiteURL = "http://127.0.0.1:1947/independent";
+    const websiteURL = process.env.PLASMO_PUBLIC_RENDERER_URL || "http://localhost:1947/independent";
 
 
     useEffect(() => {
@@ -36,24 +32,6 @@ const AnchorOverlay: React.FC<PlasmoCSUIProps> = ({ anchor }) => {
 
         return () => unsubscribe();
     }, []);
-
-
-    useEffect(() => {
-        sendToBackground({
-            name: 'code',
-            body: {
-                action: 'check',
-            }
-        }).then((data) => {
-            if (!data) {
-                setIsActivated(false);
-                return;
-            }
-            const isNotActivated = data?.subscription_ended_at || data?.subscription_cancelled_at || data?.subscription_failed_at
-            setIsActivated(!isNotActivated);
-        }
-        );
-    }, [])
 
 
     return (

@@ -2,13 +2,15 @@
 
 <div align="center">
 <img src="assets/icon.png" width="32" >
-<h1>X Cards</h1>
+<h1>M.Card</h1>
 
 [English](README.md) | [中文](README_ZH.md)
 
+Self-hosting and Cloudflare Pages instructions: [SELF_HOSTING_ZH.md](./SELF_HOSTING_ZH.md). Full source audit: [PROJECT_AUDIT_ZH.md](./PROJECT_AUDIT_ZH.md).
+
 [![x-cards intro](https://img.youtube.com/vi/v8iQV8ZoVBk/0.jpg)](https://youtu.be/okCIZrFrTCE)
 
-easy to use x-cards in x.com
+Self-hosted X post cards and portable data exports.
 
 [![][vercel-shield]][vercel-link]
 
@@ -19,27 +21,27 @@ easy to use x-cards in x.com
 
 [![][share-linkedin-shield]][share-linkedin-link]
 
-[github-issues-link]: https://github.com/hzeyuan/x-cards/issues
+[github-issues-link]: https://github.com/wlzh/m-card/issues
 [github-contributors-shield]: https://img.shields.io/github/contributors/hzeyuan/OpenGPTS?color=c4f042&labelColor=black&style=flat-square
 [github-contributors-link]: https://github.com/hzeyuan/OpenGPTS/graphs/contributors
-[vercel-link]: https://x-cards.net
-[vercel-shield]: https://img.shields.io/website?down_message=offline&label=vercel&labelColor=black&logo=vercel&style=flat-square&up_message=online&url=https://x-cards.net
+[vercel-link]: https://mcard.wlz.si
+[vercel-shield]: https://img.shields.io/website?down_message=offline&label=website&labelColor=black&style=flat-square&up_message=online&url=https://mcard.wlz.si
 [share-linkedin-link]: https://linkedin.com/feed
 [share-linkedin-shield]: https://img.shields.io/badge/-share%20on%20linkedin-black?labelColor=black&logo=linkedin&logoColor=white&style=flat-square
-[share-reddit-link]: https://www.reddit.com/submit?title=x-cards&url=https://github.com/hzeyuan/x-cards
+[share-reddit-link]: https://www.reddit.com/submit?title=M.Card&url=https://github.com/wlzh/m-card
 [share-reddit-shield]: https://img.shields.io/badge/-share%20on%20reddit-black?labelColor=black&logo=reddit&logoColor=white&style=flat-square
-[share-telegram-link]: https://t.me/share/url?text=x-cards&url=https://github.com/hzeyuan/x-cards
+[share-telegram-link]: https://t.me/share/url?text=M.Card&url=https://github.com/wlzh/m-card
 [share-telegram-shield]: https://img.shields.io/badge/-share%20on%20telegram-black?labelColor=black&logo=telegram&logoColor=white&style=flat-square
-[share-weibo-link]: http://service.weibo.com/share/share.php?sharesource=weibo&title=x-cards
+[share-weibo-link]: http://service.weibo.com/share/share.php?sharesource=weibo&title=M.Card
 [share-weibo-shield]: https://img.shields.io/badge/-share%20on%20weibo-black?labelColor=black&logo=sinaweibo&logoColor=white&style=flat-square
-[share-whatsapp-link]: https://api.whatsapp.com/send?text=x-cards
+[share-whatsapp-link]: https://api.whatsapp.com/send?text=M.Card
 [share-whatsapp-shield]: https://img.shields.io/badge/-share%20on%20whatsapp-black?labelColor=black&logo=whatsapp&logoColor=white&style=flat-square
-[share-x-link]: https://x.com/intent/tweet?hashtags=chatbot%2CchatGPT%2CopenAI&url=https://github.com/hzeyuan/x-cards
+[share-x-link]: https://x.com/intent/tweet?url=https://github.com/wlzh/m-card
 [share-x-shield]: https://img.shields.io/badge/-share%20on%20x-black?labelColor=black&logo=x&logoColor=white&style=flat-square
 
 </div>
 
-⚡ **X Cards** Share Tweet anywhere ,any format,
+⚡ **M.Card** exports X posts as images, Markdown, JSON, and portable asset bundles.
 
 ## Project Background
 

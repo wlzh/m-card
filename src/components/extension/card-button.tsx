@@ -24,6 +24,7 @@ export const CardButton: React.FC<{
         try {
             const postElement = anchor.element.closest('article[data-testid="tweet"]');
             const tweetInfo = extractTweetInfo(postElement)
+            if (!tweetInfo) throw new Error('Unable to read this post from the current X page');
             const imageSrc = await pRetry(async () => {
                 return copyImage(tweetInfo, cardConfig.current);
             }, {
@@ -77,6 +78,7 @@ export const CardButton: React.FC<{
         try {
             const postElement = anchor.element.closest('article[data-testid="tweet"]');
             const tweetInfo = extractTweetInfo(postElement)
+            if (!tweetInfo) throw new Error('Unable to read this post from the current X page');
             const thread = getPostThread(postElement);
             const tweetInfos = _.compact(thread?.map(e => extractTweetInfo(e)));
             useTweetsStore.setState((state) => {

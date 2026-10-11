@@ -59,11 +59,20 @@ export const tweet2Markdown = (tweetData: XConfig[]) => {
 };
 
 
-export const exportAsAsset = async (tweetData: XConfig) => {
+const safeFileName = (value: string) => value
+    .replace(/[\\/:*?"<>|]/g, '-')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 60) || 'tweet';
 
-    const {username, images, video, text} = tweetData;
+const fetchAsset = async (url: string) => {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`HTTP ${response.status} for ${url}`);
+    return response;
+};
 
-    // 创建一个新的 JSZip 实例
+export const exportAsAsset = async (tweetData: XConfig | XConfig[]) => {
+    const tweets = Array.isArray(tweetData) ? tweetData : [tweetData];
     const zip = new JSZip();
 
     // 辅助函数：获取高清图片URL
@@ -75,44 +84,40 @@ export const exportAsAsset = async (tweetData: XConfig) => {
     };
 
     try {
-        // 添加文本内容到 zip
-        zip.file("tweet_text.txt", text);
+        for (let tweetIndex = 0; tweetIndex < tweets.length; tweetIndex++) {
+            const { username, images = [], video, text } = tweets[tweetIndex];
+            const folder = zip.folder(`${String(tweetIndex + 1).padStart(2, '0')}-${safeFileName(username || 'tweet')}`)!;
+            folder.file("tweet.json", JSON.stringify(tweets[tweetIndex], null, 2));
+            folder.file("tweet.md", tweet2Markdown([tweets[tweetIndex]]));
+            folder.file("tweet_text.txt", text || '');
 
-        // 下载并添加图片到 zip
-        if (images && images.length > 0) {
-            for (let i = 0; i < images.length; i++) {
-                const highQualityUrl = getHighQualityImageUrl(images[i]);
-                const response = await fetch(highQualityUrl);
-                if (!response.ok) {
-                    console.warn(`Failed to fetch high quality image, falling back to original URL for image ${i + 1}`);
-                    // 如果高清版获取失败，尝试原始URL
-                    const fallbackResponse = await fetch(images[i]);
-                    if (!fallbackResponse.ok) throw new Error(`HTTP error! status: ${fallbackResponse.status}`);
-                    const blob = await fallbackResponse.blob();
-                    zip.file(`image_${i + 1}.jpg`, blob);
-                } else {
-                    const blob = await response.blob();
-                    zip.file(`image_${i + 1}.jpg`, blob);
+            for (let imageIndex = 0; imageIndex < images.length; imageIndex++) {
+                const highQualityUrl = getHighQualityImageUrl(images[imageIndex]);
+                let response: Response;
+                try {
+                    response = await fetchAsset(highQualityUrl);
+                } catch {
+                    response = await fetchAsset(images[imageIndex]);
                 }
+                const blob = await response.blob();
+                const extension = blob.type.includes('png') ? 'png' : blob.type.includes('webp') ? 'webp' : 'jpg';
+                folder.file(`image_${imageIndex + 1}.${extension}`, blob);
             }
-        }
 
-        // 下载并添加视频到 zip
-        if (video?.src) {
-            const response = await fetch(video.src);
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            const blob = await response.blob();
-            zip.file("video.mp4", blob);
+            if (video?.src) {
+                const response = await fetchAsset(video.src);
+                const blob = await response.blob();
+                const isPlaylist = blob.type.includes('mpegurl') || video.src.includes('.m3u8');
+                folder.file(isPlaylist ? "video.m3u8" : "video.mp4", blob);
+            }
         }
 
         // 生成 zip 文件
         const content = await zip.generateAsync({type: "blob"});
 
-        const zipName = '' || `twwet_assets_${username || 'none'}_${text.slice(0, 15)}`;
-        // 使用 file-saver 保存文件
+        const firstTweet = tweets[0];
+        const zipName = safeFileName(`tweet_assets_${firstTweet?.username || 'unknown'}_${firstTweet?.text?.slice(0, 24) || ''}`);
         saveAs(content, `${zipName}.zip`);
-
-        console.log('Export completed successfully');
     } catch (error) {
         console.error('Export failed', error);
         throw error; // 重新抛出错误，允许调用者处理它
@@ -120,7 +125,7 @@ export const exportAsAsset = async (tweetData: XConfig) => {
 };
 
 
-export const exportAsJSON = async (data: Object) => {
+export const exportAsJSON = async (data: object) => {
     const jsonContent = JSON.stringify(data, null, 2);
     const blob = new Blob([jsonContent], {type: 'application/json'});
     const url = URL.createObjectURL(blob);

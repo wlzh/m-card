@@ -48,7 +48,7 @@ const WelcomePage = () => {
 
                     <div className="relative mx-auto flex  flex-col items-center">
                         <h2 className="text-center text-3xl font-medium text-gray-900 dark:text-gray-50 sm:text-6xl mb-10">
-                            Welcome to X cards  {' '}
+                            Welcome to M.Card  {' '}
                         </h2>
                         <div className="w-full   pb-10 flex gap-x-10">
                             <div>
@@ -84,7 +84,7 @@ const WelcomePage = () => {
                             <a
                                 target="_blank"
                                 rel="noreferrer"
-                                href="https://github.com/hzeyuan/x-cards"
+                                href="https://github.com/wlzh/m-card"
                             >
                                 <div className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-9 py-2 w-9 px-0">
                                     <svg viewBox="0 0 438.549 438.549" className="h-4 w-4">

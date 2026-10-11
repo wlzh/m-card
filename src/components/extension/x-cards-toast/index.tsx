@@ -9,14 +9,13 @@ import type { PlasmoCSUIProps } from 'plasmo';
 import TweetManager from '../tweet-manager';
 import toast from 'react-hot-toast';
 import { cn } from '@lib/utils';
-import { InputCode } from '../input-code';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useTweetsStore } from '../use-tweet-collection';
 import ImagePreview from './image-preview';
 import { Button } from '@components/ui/button';
 import PaddingControl from './padding-control';
 import TweetControl from './tweet-control';
-import { tweet2Markdown } from '@src/app/utils/export';
+import { exportAsAsset, exportAsJSON, tweet2Markdown } from '@src/app/utils/export';
 import ScaleControl from './scale-control';
 import FontControl from './font-control';
 
@@ -29,31 +28,21 @@ interface PreviewToastProps {
 
 export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfos, anchor, }) => {
     const [isLoading, setIsLoading] = useState(false);
+    const showCodeDialog = false;
+    const setShowCodeDialog = (_value: boolean) => undefined;
     const srcRef = useRef<string>();
-    const showCodeDialog = useTweetsStore(state => state.showCodeDialog);
-    const setShowCodeDialog = useTweetsStore(state => state.setShowCodeDialog);
-
     const setImageSrc = useTweetsStore(state => state.setImageSrc);
     const [tweetStyle] = useState('posts');
     // const cardConfig = useRef({});
     const [selectedFormat, setSelectedFormat] = useState('png');
     const [selectedWidth, setSelectWidth] = useState('md');
-    const formats = ['png', 'jpeg', 'svg', 'md'];
+    const formats = ['png', 'jpeg', 'svg', 'md', 'json', 'assets'];
     // const cardStyles = ['posts', 'article',];
     const cardConfig = useTweetsStore(state => state.cardConfig);
     const setCardConfig = useTweetsStore(state => state.setCardConfig);
     const tweets = useTweetsStore(state => state.tweets);
     const activeTab = useTweetsStore(state => state.activeTab);
-    const isActivated = useTweetsStore((state) => state.isActivated);
     const [isPreview, showIsPreview] = useState(false);
-
-
-    const tabs = useMemo(() => {
-        return [
-            { value: 'single', label: 'Single' },
-            { value: 'linear', label: 'Linear', isLocked: !isActivated },
-        ]
-    }, [isActivated])
 
     const styles = {
         container: {
@@ -128,14 +117,6 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
     }
     }
 `
-    const canPass = () => {
-        if (!isActivated && activeTab === 'linear') {
-            setShowCodeDialog(true);
-            return false;
-        }
-        return true;
-    }
-
     const handleCopyImage = async () => {
         if (selectedFormat === 'md') {
             const md = tweet2Markdown(tweets);
@@ -145,6 +126,15 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
                 duration: 100,
                 position: 'top-center',
             });
+            return;
+        }
+        if (selectedFormat === 'json') {
+            await navigator.clipboard.writeText(JSON.stringify(tweets, null, 2));
+            toast.success('JSON copied to clipboard');
+            return;
+        }
+        if (selectedFormat === 'assets') {
+            toast.error('Asset bundles can only be downloaded');
             return;
         }
         const data = await sendMessageToIframe('generate-card-local', {
@@ -174,14 +164,22 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `x-cards.md`;
+            a.download = `m-card.md`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
             return;
         }
-        const xName = 'x-card'
+        if (selectedFormat === 'json') {
+            await exportAsJSON(tweets);
+            return;
+        }
+        if (selectedFormat === 'assets') {
+            await exportAsAsset(tweets);
+            return;
+        }
+        const xName = 'm-card'
         const data = await sendMessageToIframe('generate-card-local', {
             tweetInfo: tweets,
             cardConfig: {
@@ -228,10 +226,11 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
     }
 
     const handleSelectFormat = (format) => {
-        setCardConfig({
-            format: format.toLowerCase(),
-        });
-        setSelectedFormat(format.toLowerCase());
+        const normalizedFormat = format.toLowerCase();
+        if (['png', 'jpeg', 'svg'].includes(normalizedFormat)) {
+            setCardConfig({ format: normalizedFormat });
+        }
+        setSelectedFormat(normalizedFormat);
     }
 
     const handleSelectWidth = async (width: string) => {
@@ -307,7 +306,7 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
     }}>
         <div className="flex justify-between items-center mb-2">
             <div className='flex gap-x-2  justify-center items-center '>
-                <h2 className="text-sm font-semibold">x-cards options</h2>
+                <h2 className="text-sm font-semibold">M.Card options</h2>
             </div>
         </div>
 
@@ -339,7 +338,7 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
         ></TweetControl>
         <div>
             <h3 className="text-sm font-semibold mb-2">FORMAT</h3>
-            <div className='grid grid-cols-4 gap-2 w-full'>
+            <div className='grid grid-cols-3 gap-2 w-full'>
                 {formats.map((format) => (
                     <Button
                         size={'sm'}
@@ -361,10 +360,6 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
         <FontControl></FontControl>
 
         <ScaleControl value={cardConfig.scale} onChange={v => {
-            if (!isActivated) {
-                useTweetsStore.getState().setShowCodeDialog(true);
-                return;
-            }
             setCardConfig({
                 scale: v,
             });
@@ -381,7 +376,7 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
             Copy
         </button>
 
-        <span className='text-xs text-neutral-400 absolute  pt-2 bottom-1 right-4 '>
+        {false && <span className='text-xs text-neutral-400 absolute  pt-2 bottom-1 right-4 '>
             <div className='flex justify-between'>
                 <button onClick={() => {
                     setShowCodeDialog(true);
@@ -406,7 +401,7 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
                     </svg>
                 </a>
             </div>
-        </span>
+        </span>}
     </div >
 
 
@@ -460,14 +455,7 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
                 )}
             </AnimatePresence>
 
-            <AnimatePresence>
-                {showCodeDialog && <InputCode onClose={() => setShowCodeDialog(false)} />}
-            </AnimatePresence>
-
-
-
         </motion.div >
 
     );
 };
-

@@ -150,6 +150,7 @@ export const exportImage = async (format: string) => {
     try {
         const dataUrl = await generateImage({
             format: format,
+            fontFamily: false,
         });
         const link = document.createElement('a');
         link.download = `export.${format}`;

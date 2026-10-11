@@ -3,6 +3,7 @@
 
 # dependencies
 /node_modules
+/node_modules.*-incomplete
 /.pnp
 .pnp.js
 
@@ -30,5 +31,5 @@ dist/
 .plasmo
 
 # typescript
-.tsbuildinfo
+*.tsbuildinfo
 .next

@@ -26,9 +26,7 @@ export const TwitterCard: React.FC<TwitterCardProps> = ({ xConfig, backgroundSty
                         </div>
                     ))
                 }
-                <div className=' absolute right-0 bottom-0 opacity-40 text-[##6d6d6d]'>
-                    ∙ Made with x-cards.net
-                </div>
+                {/* Watermark intentionally disabled for the self-hosted build. */}
             </div>
         )
     }, [backgroundStyles, xConfig, cardStyles]);

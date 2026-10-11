@@ -1,8 +1,8 @@
 const baseSiteConfig = {
-    name: "X Cards",
+    name: "M.Card",
     description:
         "Share X anywhere, any format. A Chrome extension for easy access to X posts in multiple formats.",
-    url: "https://x-cards.net",
+    url: process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:1947",
     keywords: [
         "X.com",
         "Twitter",
@@ -17,23 +17,11 @@ const baseSiteConfig = {
         "JPEG",
         "SVG",
     ],
-    authors: [
-        {
-            name: "hzeyuan",
-            url: "https://github.com/hzeyuan",
-        }
-    ],
-    creator: '@IndieDevr',
+    authors: [{ name: "wlzh", url: "https://github.com/wlzh" }],
+    creator: 'wlzh',
     themeColor: '#fff',
-    icons: {
-        icon: "https://static.usesless.com/x-cards/favicon/favicon.ico",
-        android: "https://static.usesless.com/x-cards/favicon/android-chrome-192x192.png",
-        shortcut: "https://static.usesless.com/x-cards/favicon/favicon.ico",
-        apple: "https://static.usesless.com/x-cards/favicon/apple-touch-icon.png",
-    },
-    ogImage: "https://static.usesless.com/x-cards/favicon/x-cards-og.png",
     links: {
-        github: "https://github.com/hzeyuan/x-cards",
+        github: "https://github.com/wlzh/m-card",
     },
 }
 
@@ -43,7 +31,6 @@ export const siteConfig = {
         type: "website",
         locale: "en_US",
         url: baseSiteConfig.url,
-        image: baseSiteConfig.ogImage,
         title: baseSiteConfig.name,
         description: baseSiteConfig.description,
         siteName: baseSiteConfig.name,
@@ -51,9 +38,7 @@ export const siteConfig = {
     twitter: {
         card: "summary_large_image",
         title: baseSiteConfig.name,
-        image: baseSiteConfig.ogImage,
         description: baseSiteConfig.description,
-        images: [`${baseSiteConfig.url}/xcards/favicon/x-cards-og.png`],
         creator: baseSiteConfig.creator,
     },
 }

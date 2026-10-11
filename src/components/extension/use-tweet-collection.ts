@@ -68,7 +68,7 @@ export const useTweetsStore = create<TweetCollection>(
                 showCodeDialog
             })
         },
-        isActivated: false,
+        isActivated: true,
         setIsActivated: (isActivated: boolean) => {
             set({
                 isActivated
@@ -127,4 +127,3 @@ export const useTweetsStore = create<TweetCollection>(
         },
     })
 );
-

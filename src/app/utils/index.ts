@@ -129,8 +129,7 @@ export const downloadImage = async (tweetInfo: XConfig | XConfig[], cardConfig =
     cardConfig,
   }, 3000);
   const { url, dataUrl } = value;
-  const xName = 'x-card'
-  //  tweetInfo.username || 'x-card';
+  const xName = 'm-card'
   const link = document.createElement('a');
   link.download = `${xName}.${cardConfig?.format || 'png'}`
   link.href = dataUrl;
@@ -156,7 +155,7 @@ export const sendMessageToIframe = async (name: string, data: any, timeout: numb
 
 
 
-export function extractTweetInfo(postElement) {
+export function extractTweetInfo(postElement: Element | null) {
   const tweet: XConfig = {
     authorUrl: '',
     url: '',
@@ -171,6 +170,8 @@ export function extractTweetInfo(postElement) {
     replies: 0,
     likes: 0,
   };
+
+  if (!postElement) return null;
 
   // 提取头像
   tweet.avatar = postElement.querySelector('img[draggable="true"]')?.src;
@@ -235,9 +236,10 @@ export function extractTweetInfo(postElement) {
   // 提取视频（如果有）
   const video = postElement.querySelector('video');
   if (video) {
+    const source = video.currentSrc || video.src || video.querySelector('source')?.src || '';
     tweet.video = {
       poster: video.poster,
-      src: video.querySelector('source').src
+      src: source
     };
   }
 
@@ -251,9 +253,9 @@ export function extractTweetInfo(postElement) {
 
   // 提取统计信息
   const stats = postElement.querySelector('[role="group"]');
-  tweet.replies = stats.querySelector('[data-testid="reply"]').textContent || 0;
-  tweet.shares = stats.querySelector('[data-testid="retweet"]').textContent || 0;
-  tweet.likes = stats.querySelector('[data-testid="like"]').textContent || 0;
+  tweet.replies = stats?.querySelector('[data-testid="reply"]')?.textContent || 0;
+  tweet.shares = stats?.querySelector('[data-testid="retweet"]')?.textContent || 0;
+  tweet.likes = stats?.querySelector('[data-testid="like"]')?.textContent || 0;
   // tweet.views = stats.querySelector('a[href$="/analytics"]').textContent;
 
   return tweet;
@@ -268,6 +270,3 @@ export const findXCardsIframe = () => {
   return iframe;
 
 }
-
-
-
