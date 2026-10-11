@@ -33,16 +33,24 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
     const srcRef = useRef<string>();
     const setImageSrc = useTweetsStore(state => state.setImageSrc);
     const [tweetStyle] = useState('posts');
-    // const cardConfig = useRef({});
-    const [selectedFormat, setSelectedFormat] = useState('png');
-    const [selectedWidth, setSelectWidth] = useState('md');
+    // 用户点过的格式/宽度档位；null = 未点过，高亮回落到本机默认值反查结果
+    const [selectedFormat, setSelectedFormat] = useState<string | null>(null);
+    const [selectedWidth, setSelectWidth] = useState<string | null>(null);
     const formats = ['png', 'jpeg', 'svg', 'md', 'json', 'assets'];
-    // const cardStyles = ['posts', 'article',];
     const cardConfig = useTweetsStore(state => state.cardConfig);
     const setCardConfig = useTweetsStore(state => state.setCardConfig);
+    const uiDefaults = useTweetsStore(state => state.uiDefaults);
+    const setUIDefaults = useTweetsStore(state => state.setUIDefaults);
     const tweets = useTweetsStore(state => state.tweets);
     const activeTab = useTweetsStore(state => state.activeTab);
     const [isPreview, showIsPreview] = useState(false);
+
+    // 默认宽度反查档位（sm/md/lg/xl）；面板自定义宽度不在档位内则不高亮
+    const defaultWidthKey = uiDefaults.width != null
+        ? (Object.keys(CardWidths) as (keyof typeof CardWidths)[]).find(k => CardWidths[k] === uiDefaults.width) ?? ''
+        : '';
+    const activeWidthKey = selectedWidth ?? defaultWidthKey;
+    const activeFormat = selectedFormat ?? uiDefaults.format ?? 'png';
 
     const styles = {
         container: {
@@ -118,7 +126,7 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
     }
 `
     const handleCopyImage = async () => {
-        if (selectedFormat === 'md') {
+        if (activeFormat === 'md') {
             const md = tweet2Markdown(tweets);
             // 复制文本
             await navigator.clipboard.writeText(md);
@@ -128,12 +136,12 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
             });
             return;
         }
-        if (selectedFormat === 'json') {
+        if (activeFormat === 'json') {
             await navigator.clipboard.writeText(JSON.stringify(tweets, null, 2));
             toast.success('JSON copied to clipboard');
             return;
         }
-        if (selectedFormat === 'assets') {
+        if (activeFormat === 'assets') {
             toast.error('Asset bundles can only be downloaded');
             return;
         }
@@ -158,7 +166,7 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
     }
 
     const handleDownloadImage = async () => {
-        if (selectedFormat === 'md') {
+        if (activeFormat === 'md') {
             const md = tweet2Markdown(tweets);
             const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
             const url = URL.createObjectURL(blob);
@@ -171,11 +179,11 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
             URL.revokeObjectURL(url);
             return;
         }
-        if (selectedFormat === 'json') {
+        if (activeFormat === 'json') {
             await exportAsJSON(tweets);
             return;
         }
-        if (selectedFormat === 'assets') {
+        if (activeFormat === 'assets') {
             await exportAsAsset(tweets);
             return;
         }
@@ -188,7 +196,7 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
         }, 3000);
         const imageSrc = data.dataUrl;
         const link = document.createElement('a');
-        link.download = `${xName}.${selectedFormat || 'png'}`
+        link.download = `${xName}.${activeFormat || 'png'}`
         link.href = imageSrc;
         link.click();
     }
@@ -321,7 +329,7 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
                     <Button
                         size={'sm'}
                         className={
-                            selectedWidth === width ? 'bg-primary' : 'bg-[#262626]'
+                            activeWidthKey === width ? 'bg-primary' : 'bg-[#262626]'
                         }
                         key={width} onClick={() => handleSelectWidth(width)}>
                         {width}
@@ -344,10 +352,10 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
                         size={'sm'}
                         key={format}
                         className={
-                            selectedFormat === format ? 'bg-primary' : 'bg-[#262626]'
+                            activeFormat === format ? 'bg-primary' : 'bg-[#262626]'
                         }
                         style={{
-                            ...(selectedFormat === format ? styles.activeButton : {}),
+                            ...(activeFormat === format ? styles.activeButton : {}),
                         }}
                         onClick={() => handleSelectFormat(format)}
                     >
@@ -359,7 +367,7 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
 
         <FontControl></FontControl>
 
-        <ScaleControl value={cardConfig.scale ?? 2} onChange={v => {
+        <ScaleControl value={cardConfig.scale ?? uiDefaults.scale ?? 2} onChange={v => {
             setCardConfig({
                 scale: v,
             });
@@ -418,6 +426,23 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
         </span>}
     </div >
 
+
+    useEffect(() => {
+        // 首次打开：从渲染 iframe 拉取本机默认值，按钮高亮与配置面板保存的默认值一致
+        let cancelled = false;
+        sendMessageToIframe('get-card-defaults', {}, 3000)
+            .then((defaults) => {
+                if (!cancelled && defaults) {
+                    setUIDefaults(defaults);
+                }
+            })
+            .catch(() => {
+                // iframe 未就绪或超时：保持无高亮状态，生成仍会回落到 iframe 侧默认值
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, []);
 
     useEffect(() => {
         handlePreview(tweetInfo, tweets);

@@ -16,14 +16,30 @@ export interface CardConfig {
     width: number;
     colorIndex: number;
     scale: number;
-    fontSize: string;
+    fontSize: number;
     fontFamily: string;
+}
+
+// 生成面板（toast）首次加载时从渲染 iframe 拉取的本机默认值快照。
+// 仅用于 UI 显示（按钮高亮/初始状态），不参与生成——生成侧未调整的参数
+// 由 iframe 自行回落到 IndexedDB 里的同一份默认值。
+export interface CardUIDefaults {
+    colorIndex: number;
+    width: number;
+    padding: number;
+    fontSize: number;
+    fontFamily: string;
+    format: string;
+    scale: number;
+    controls: TweetControlState;
 }
 
 interface TweetCollection {
 
     cardConfig: Partial<CardConfig>;
     setCardConfig: (cardConfig: Partial<CardConfig>) => void;
+    uiDefaults: Partial<CardUIDefaults>;
+    setUIDefaults: (uiDefaults: Partial<CardUIDefaults>) => void;
     isActivated: boolean;
     setIsActivated: (isActivated: boolean) => void;
     imageSrc?: string;
@@ -57,6 +73,15 @@ export const useTweetsStore = create<TweetCollection>(
                 cardConfig: {
                     ...oldCardConfig,
                     ...cardConfig
+                }
+            })
+        },
+        uiDefaults: {},
+        setUIDefaults: (uiDefaults) => {
+            set({
+                uiDefaults: {
+                    ...get().uiDefaults,
+                    ...uiDefaults,
                 }
             })
         },

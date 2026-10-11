@@ -1,10 +1,14 @@
 import ResultIcon from "@src/app/(app)/components/ResultIcon"
 import { presets } from "@src/app/(app)/components/card-generator/color"
+import { useTweetsStore } from "./use-tweet-collection";
 import React from "react";
 
 export const PresetColorList = ({ onSelect }) => {
 
-    const [colorIndex, setColorIndex] = React.useState(0);
+    // 初始选中来自本机默认值（uiDefaults.colorIndex），点过后以本地为准
+    const defaultColorIndex = useTweetsStore(state => state.uiDefaults.colorIndex);
+    const [localIndex, setLocalIndex] = React.useState<number | null>(null);
+    const colorIndex = localIndex ?? defaultColorIndex ?? 0;
 
     return (
         <div className="preset-selector">
@@ -17,7 +21,7 @@ export const PresetColorList = ({ onSelect }) => {
                         value={index}
                         checked={colorIndex === index}
                         onChange={() => {
-                            setColorIndex(index);
+                            setLocalIndex(index);
                             onSelect(index);
                         }}
                     />

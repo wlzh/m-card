@@ -28,7 +28,7 @@ export const FontController = (props: FontControllerProps) => {
                     <div className=" w-full">
                         <Slider step={0.5}
                             value={[cardStyles.fontSize]}
-                            max={24}
+                            max={30}
                             min={12}
                             onValueChange={(v) => {
                                 updateCardStyles({

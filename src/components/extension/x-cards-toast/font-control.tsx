@@ -3,14 +3,16 @@ import { useCallback, useMemo, useState } from "react";
 import { useTweetsStore } from "../use-tweet-collection";
 import { Input } from "@components/ui/input";
 
+// 字号统一使用 px 数值，与配置面板 cardStyles.fontSize 的数值体系一致，
+// 两边默认值才能互相反查（如面板默认 16 → toast 首次加载高亮 md）
 export const fontSizeMap = {
-    'xs': '0.75rem', // Example sizes, adjust as needed
-    'sm': '0.875rem',
-    'md': '1rem',
-    'lg': '1.125rem',
-    'xl': '1.25rem',
-    '2xl': '1.5rem',
-    '3xl': '1.875rem',
+    'xs': 12,
+    'sm': 14,
+    'md': 16,
+    'lg': 18,
+    'xl': 20,
+    '2xl': 24,
+    '3xl': 30,
 };
 
 const googleFonts = [
@@ -43,11 +45,19 @@ const googleFonts = [
 ];
 
 const FontControl = () => {
-    const [selectedFontSize, setSelectedFontSize] = useState('xl');
-    const [selectedFontFamily, setSelectedFontFamily] = useState('sans-serif');
+    // 初始高亮从本机默认值反查（如默认 16px → md），拉取完成前不高亮
+    const defaultFontSize = useTweetsStore(state => state.uiDefaults.fontSize);
+    const [selectedFontSize, setSelectedFontSize] = useState<string | null>(null);
+    const [selectedFontFamily, setSelectedFontFamily] = useState<string | null>(null);
     const setCardConfig = useTweetsStore(state => state.setCardConfig);
     const [customFontSize, setCustomFontSize] = useState('');
     const [customFontFamily, setCustomFontFamily] = useState('');
+
+    // 默认值拉取完成后反查档位；不在档位内（面板自定义值）保持不高亮
+    const activeSizeKey = selectedFontSize
+        ?? (defaultFontSize != null
+            ? Object.keys(fontSizeMap).find(k => fontSizeMap[k] === defaultFontSize) ?? ''
+            : '');
 
     const handleSelectFontSize = useCallback((sizeKey) => {
         setSelectedFontSize(sizeKey);
@@ -72,7 +82,7 @@ const FontControl = () => {
                     <Button
                         key={sizeKey}
                         size="sm"
-                        className={selectedFontSize === sizeKey ? 'bg-primary' : 'bg-[#262626]'}
+                        className={activeSizeKey === sizeKey ? 'bg-primary' : 'bg-[#262626]'}
                         onClick={() => handleSelectFontSize(sizeKey)}
                     >
                         {sizeKey}
@@ -80,7 +90,7 @@ const FontControl = () => {
                 ))}
             </div>
         );
-    }, [selectedFontSize, customFontSize]);
+    }, [activeSizeKey, customFontSize]);
 
     // const renderFontFamilyControl = useMemo(() => {
     //     return (

@@ -25,6 +25,31 @@ const Index = () => {
     useEffect(() => {
         const fn = async (event: MessageEvent) => {
             if (event.origin !== 'https://x.com' || event.source !== window.parent) return;
+
+            // 生成面板（toast）首次打开时拉取本机默认值，用于按钮高亮等 UI 显示
+            if (event.data?.action === 'get-card-defaults') {
+                try {
+                    await useCardStore.persist.rehydrate();
+                } catch (rehydrateError) {
+                    console.warn('rehydrate for get-card-defaults failed', rehydrateError);
+                }
+                const { colorIndex, backgroundStyles, cardStyles } = useCardStore.getState();
+                (event.source as Window)?.postMessage({
+                    action: 'get-card-defaults',
+                    value: {
+                        colorIndex,
+                        width: cardStyles.width,
+                        padding: backgroundStyles.padding,
+                        fontSize: cardStyles.fontSize,
+                        fontFamily: cardStyles.fontFamily,
+                        format: cardStyles.exportFormat || 'png',
+                        scale: cardStyles.exportScale || 2,
+                        controls: cardStyles.controls,
+                    },
+                }, event.origin);
+                return;
+            }
+
             const actionName = 'generate-card-local'
             if (event.data?.action === actionName && event.data?.body) {
 

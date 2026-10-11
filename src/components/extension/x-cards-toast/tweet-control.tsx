@@ -11,13 +11,18 @@ interface TweetControlProps {
 
 const TweetControl: React.FC<TweetControlProps> = ({ onChange }) => {
   const isActivated = useTweetsStore((state) => state.isActivated);
-  const [state, setState] = useState<TweetControlState>({
+  // 开关初始状态来自本机默认值（uiDefaults.controls），用户点过后以本地覆盖为准
+  const defaultControls = useTweetsStore((state) => state.uiDefaults.controls);
+  const [localState, setLocalState] = useState<TweetControlState | null>(null);
+  const state: TweetControlState = {
     showUser: true,
     showActions: true,
     showTime: true,
     showFooter: true,
     showLogo: true,
-  });
+    ...defaultControls,
+    ...localState,
+  };
 
   const toggleOption = (option: keyof TweetControlState) => {
     const newState = { ...state, [option]: !state[option] };
@@ -25,7 +30,7 @@ const TweetControl: React.FC<TweetControlProps> = ({ onChange }) => {
       useTweetsStore.getState().setShowCodeDialog(true);
       return;
     }
-    setState(newState);
+    setLocalState(newState);
     onChange(newState);
   };
 
