@@ -167,8 +167,8 @@ export const ColorSelect = () => {
 
     const colorIndex = useCardStore(state => state.colorIndex);
     const setColorIndex = useCardStore(state => state.setColorIndex);
-    const updateCardStyles = useCardStore((state) => state.updateCardStyles);
-    // const filStyles = useCardStore(state => state.filStyles);
+    const updateBackgroundStyles = useCardStore((state) => state.updateBackgroundStyles);
+    const setTabConfig = useCardStore((state) => state.setTabConfig);
 
 
     return (
@@ -192,7 +192,10 @@ export const ColorSelect = () => {
                             value={index}
                             checked={colorIndex === index}
                             onChange={() => {
+                                // 最近操作优先：选预设即退出渐变/自定义纯色模式，预设立即生效
                                 setColorIndex(index);
+                                updateBackgroundStyles({ useGradient: false });
+                                setTabConfig({ openCustomColor: false });
                             }}
                         />
 

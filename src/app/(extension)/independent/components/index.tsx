@@ -90,7 +90,10 @@ const Index = () => {
                 // 以下参数只在扩展生成面板里实际调整过才会出现（cardConfig 初始为空），
                 // 未调整的字段保持面板（本机默认值）的设置
                 if (cardConfig?.colorIndex != null) {
+                    // 与配置面板同语义：选预设即退出渐变/自定义纯色，预设立即生效
                     useCardStore.getState().setColorIndex(cardConfig.colorIndex);
+                    useCardStore.getState().updateBackgroundStyles({ useGradient: false });
+                    useCardStore.getState().setTabConfig({ openCustomColor: false });
                 }
 
                 if (cardConfig?.padding >= 0) {
