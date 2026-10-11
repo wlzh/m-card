@@ -44,6 +44,10 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
     const tweets = useTweetsStore(state => state.tweets);
     const activeTab = useTweetsStore(state => state.activeTab);
     const [isPreview, showIsPreview] = useState(false);
+    // 内嵌默认设置面板（展开/收起）：完整配置界面直接嵌在生图窗口里，
+    // 与隐藏渲染 iframe 同源，共享本机 IndexedDB —— 改完即存，生成即刻生效
+    const [showSettings, setShowSettings] = useState(false);
+    const settingsPanelUrl = process.env.PLASMO_PUBLIC_RENDERER_URL || "http://localhost:1947/independent";
 
     // 默认宽度反查档位（sm/md/lg/xl）；面板自定义宽度不在档位内则不高亮
     const defaultWidthKey = uiDefaults.width != null
@@ -373,18 +377,17 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
             });
         }} />
 
-        {/* 直达卡片配置面板：水印、padding、字号等所有默认值在那里设置并保存 */}
+        {/* 展开内嵌默认设置面板：水印、宽度、padding、字号、背景、导出等全部默认值
+            都在生图窗口里直接改，实时预览、自动保存本机，无需另开网页 */}
         <button
-            style={styles.button}
-            onClick={() =>
-                window.open(
-                    process.env.PLASMO_PUBLIC_RENDERER_URL || "http://localhost:1947/independent",
-                    '_blank'
-                )
-            }
+            style={{
+                ...styles.button,
+                ...(showSettings ? styles.activeButton : {}),
+            }}
+            onClick={() => setShowSettings(v => !v)}
         >
             <Settings className=' h-4 w-4 mr-2' />
-            打开卡片面板 · 设置默认值
+            {showSettings ? '收起默认设置' : '默认设置（水印 / 样式）'}
         </button>
 
         <button style={styles.button} onClick={handleDownloadImage}>
@@ -461,11 +464,16 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
         <motion.div className=''
             layout
             initial={{ width: isPreview ? '320px' : '696px' }}
-            animate={{ width: isPreview ? '320px' : '696px' }}
+            animate={{ width: showSettings ? 'min(1080px, calc(100vw - 48px))' : (isPreview ? '320px' : '696px') }}
             transition={{ duration: 0.3 }}
             style={{
                 ...styles.container,
-                // width: isPreview ? '256px' : '696px',
+                // 展开默认设置时：纵向布局、放宽最大宽度、整体可滚动
+                ...(showSettings ? {
+                    flexDirection: 'column' as const,
+                    maxWidth: 'none',
+                    overflowY: 'auto' as const,
+                } : {}),
             }}
             onMouseEnter={() => showIsPreview(false)}
             onMouseLeave={() => showIsPreview(true)}
@@ -481,7 +489,7 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
             </button>
             {renderPreview}
             <AnimatePresence>
-                {!isPreview && (
+                {!isPreview && !showSettings && (
                     <motion.div
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
@@ -493,6 +501,22 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            {/* 内嵌完整默认设置面板：与预览同窗口，展开即用 */}
+            {showSettings && (
+                <iframe
+                    src={settingsPanelUrl}
+                    title="M.Card 默认设置"
+                    style={{
+                        width: '100%',
+                        height: 'min(620px, 62vh)',
+                        border: 'none',
+                        borderRadius: '0.5rem',
+                        background: '#fff',
+                        flexShrink: 0,
+                    }}
+                />
+            )}
 
         </motion.div >
 

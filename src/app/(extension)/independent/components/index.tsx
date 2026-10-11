@@ -143,34 +143,39 @@ const Index = () => {
                 //     await new Promise((resolve) => setTimeout(resolve, 1000));
                 // }
 
-                requestAnimationFrame(async () => {
-                    try {
-                        // 导出格式/倍率：优先用生成面板里选的，否则用面板保存的默认值
-                        const currentStore = useCardStore.getState();
-                        const dataUrl = await generateImage({
-                            format: cardConfig?.format || currentStore.cardStyles.exportFormat || 'png',
-                            scale: cardConfig?.scale || currentStore.cardStyles.exportScale || 2,
-                            fontFamily: cardConfig.fontFamily || false,
-                        });
-                        (event.source as Window)?.postMessage({
-                            action: actionName,
-                            value: { dataUrl }
-                        }, event.origin);
-                    } catch (error) {
-                        (event.source as Window)?.postMessage({
-                            action: actionName,
-                            value: { error: error instanceof Error ? error.message : 'Card generation failed' }
-                        }, event.origin);
-                    } finally {
-                        // 图片已生成完毕（DOM 截图结束），恢复面板默认设置并解除持久化暂停
-                        if (pendingGenerationSnapshot) {
-                            useCardStore.setState(pendingGenerationSnapshot);
-                            pendingGenerationSnapshot = null;
+                // 双 rAF + 短延时：确保 React 已把刚写入的状态（帖子内容/水印/临时参数）
+                // commit 到 DOM 再截图，避免截到旧画面（水印缺失的一大来源）
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(async () => {
+                        await new Promise((r) => setTimeout(r, 120));
+                        try {
+                            // 导出格式/倍率：优先用生成面板里选的，否则用面板保存的默认值
+                            const currentStore = useCardStore.getState();
+                            const dataUrl = await generateImage({
+                                format: cardConfig?.format || currentStore.cardStyles.exportFormat || 'png',
+                                scale: cardConfig?.scale || currentStore.cardStyles.exportScale || 2,
+                                fontFamily: cardConfig.fontFamily || false,
+                            });
+                            (event.source as Window)?.postMessage({
+                                action: actionName,
+                                value: { dataUrl }
+                            }, event.origin);
+                        } catch (error) {
+                            (event.source as Window)?.postMessage({
+                                action: actionName,
+                                value: { error: error instanceof Error ? error.message : 'Card generation failed' }
+                            }, event.origin);
+                        } finally {
+                            // 图片已生成完毕（DOM 截图结束），恢复面板默认设置并解除持久化暂停
+                            if (pendingGenerationSnapshot) {
+                                useCardStore.setState(pendingGenerationSnapshot);
+                                pendingGenerationSnapshot = null;
+                            }
+                            setPersistencePaused(false);
+                            // 解除暂停后强制落盘一次快照值，兜底保证存储 == 内存（防抖期间可能有一次被暂停丢弃）
+                            await persistSettingsNow();
                         }
-                        setPersistencePaused(false);
-                        // 解除暂停后强制落盘一次快照值，兜底保证存储 == 内存（防抖期间可能有一次被暂停丢弃）
-                        await persistSettingsNow();
-                    }
+                    });
                 });
             }
         }

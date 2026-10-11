@@ -287,10 +287,11 @@ export const setPersistencePaused = (paused: boolean) => {
 // 立即把当前面板设置完整落盘（绕过防抖），用于恢复后兜底
 export const persistSettingsNow = async () => {
     const { colorIndex, backgroundStyles, cardStyles, tabConfig } = useCardStore.getState();
-    await idbSet('card-settings', JSON.stringify({
+    const serialized = JSON.stringify({
         state: { colorIndex, backgroundStyles, cardStyles, tabConfig },
         version: 1,
-    }));
+    });
+    await idbSet('card-settings', serialized);
 };
 
 const flushPendingWrites = () => {
@@ -300,6 +301,39 @@ const flushPendingWrites = () => {
     writes.forEach((value, key) => {
         void idbSet(key, value);
     });
+};
+
+// 跨上下文实时同步：同源的面板标签页 / 生图窗口内嵌面板 / 隐藏渲染 iframe
+// 通过 BroadcastChannel 互相通知设置变化，收到即重读 IndexedDB——
+// 改水印后生成立刻用新值，不再依赖「生成时机重读」这一条路径。
+// 仅在值变化时广播：rehydrate 的回写值与上次相同会被抑制，防止广播回环。
+let lastBroadcastValue = '';
+let settingsChannel: BroadcastChannel | null = null;
+const getSettingsChannel = (): BroadcastChannel | null => {
+    if (settingsChannel || typeof BroadcastChannel === 'undefined') {
+        return settingsChannel;
+    }
+    try {
+        settingsChannel = new BroadcastChannel('mcard-settings');
+        settingsChannel.onmessage = async (ev: MessageEvent) => {
+            if ((ev.data as any)?.type !== 'updated') return;
+            if (persistencePauseCount > 0) return; // 生成中不打扰临时覆盖
+            try {
+                await useCardStore.persist.rehydrate();
+            } catch {
+                // 重读失败则维持内存值，下次生成前还有兜底 rehydrate
+            }
+        };
+    } catch {
+        settingsChannel = null;
+    }
+    return settingsChannel;
+};
+
+const broadcastUpdate = (value: string) => {
+    if (value === lastBroadcastValue) return;
+    lastBroadcastValue = value;
+    getSettingsChannel()?.postMessage({ type: 'updated' });
 };
 
 const storage: StateStorage = {
@@ -315,6 +349,10 @@ const storage: StateStorage = {
             return;
         }
         pendingWrites.set(name, value);
+        // 立即广播（落盘仍走防抖）：其它同源上下文马上重读新值
+        if (name === 'card-settings') {
+            broadcastUpdate(value);
+        }
         if (persistFlushTimer) {
             clearTimeout(persistFlushTimer);
         }
