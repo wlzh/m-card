@@ -67,9 +67,17 @@ const WelcomePage = () => {
                                 <div className="flex flex-col justify-start space-y-12 text-center ">
 
                                     <div>
-                                        <div style={{ opacity: 1, willChange: "auto", transform: "none" }}>
-                                            <span className=" bg-[aquamarine] hover:shadow-xl hover:opacity-80  border  cursor-pointer rounded-lg px-2 py-1 text-5xl font-bold text-black dark:text-white">
-                                                Enjoy!!
+                                        <div style={{ opacity: 1, willChange: "auto", transform: "none" }} className="flex flex-col items-center gap-y-4">
+                                            <a
+                                                href="/independent"
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="bg-[aquamarine] hover:shadow-xl hover:opacity-80 border cursor-pointer rounded-lg px-6 py-2 text-2xl font-bold text-black dark:text-white inline-block"
+                                            >
+                                                打开卡片面板 · 设置默认值
+                                            </a>
+                                            <span className="text-sm text-gray-500 dark:text-gray-400">
+                                                水印、宽度、内边距等所有设置都在面板里，改完点「Save as Default」即为本机默认值，扩展生成卡片时自动生效
                                             </span>
                                         </div>
                                     </div>
