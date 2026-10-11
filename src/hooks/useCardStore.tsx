@@ -251,12 +251,26 @@ export const factorySettings: PersistedSettings = {
 // 本机持久化的「个人默认值」快照存放在这个 IndexedDB key 里
 const DEFAULTS_STORAGE_KEY = 'card-defaults';
 
+// 校验恢复出来的默认值快照形状，防止合法 JSON 但内容错误污染面板
+const isValidSettings = (value: any): value is PersistedSettings => {
+    return !!value
+        && typeof value === 'object'
+        && typeof value.colorIndex === 'number'
+        && !!value.backgroundStyles && typeof value.backgroundStyles === 'object'
+        && !!value.cardStyles && typeof value.cardStyles === 'object'
+        && typeof value.cardStyles.width === 'number'
+        && !!value.tabConfig && typeof value.tabConfig === 'object';
+};
+
 // IndexedDB 存储适配层，与 useTemplatesStore 使用同一套方案。
 // 写入做了 300ms 尾沿防抖：拖动滑块这类高频 set 只落一次盘，省 CPU/IO；
 // 卸载前 flush 保证不丢最后一次修改。
 const PERSIST_DEBOUNCE_MS = 300;
 let persistFlushTimer: ReturnType<typeof setTimeout> | null = null;
 let pendingWrites = new Map<string, string>();
+// 首次 getItem 成功前禁止写入：避免挂载期的任何 set()
+// （如示例头像加载触发 addLoadedImage）把出厂默认值写进存储、覆盖用户已有设置
+let hydratedFromStorage = false;
 
 const flushPendingWrites = () => {
     persistFlushTimer = null;
@@ -271,9 +285,14 @@ const storage: StateStorage = {
     getItem: async (name: string): Promise<string | null> => {
         // 读取前先落盘未写完的数据，避免读到旧值
         flushPendingWrites();
-        return (await idbGet(name)) || null
+        const value = await idbGet<string>(name);
+        hydratedFromStorage = true;
+        return value || null
     },
     setItem: async (name: string, value: string): Promise<void> => {
+        if (!hydratedFromStorage) {
+            return;
+        }
         pendingWrites.set(name, value);
         if (persistFlushTimer) {
             clearTimeout(persistFlushTimer);
@@ -368,13 +387,18 @@ export const useCardStore = create(
                 const snapshot: PersistedSettings = { colorIndex, backgroundStyles, cardStyles, tabConfig };
                 await idbSet(DEFAULTS_STORAGE_KEY, JSON.stringify(snapshot));
             },
-            // 恢复本机默认值；从未保存过或快照损坏则回退出厂默认值
+            // 恢复本机默认值；从未保存过或快照损坏/形状不对则回退出厂默认值
             loadDefault: async () => {
                 let defaults: PersistedSettings = factorySettings;
                 try {
                     const raw = await idbGet<string>(DEFAULTS_STORAGE_KEY);
                     if (raw) {
-                        defaults = JSON.parse(raw);
+                        const parsed = JSON.parse(raw);
+                        if (isValidSettings(parsed)) {
+                            defaults = parsed;
+                        } else {
+                            console.warn('loadDefault: saved defaults have invalid shape, falling back to factory settings');
+                        }
                     }
                 } catch (err) {
                     console.warn('loadDefault: saved defaults corrupted, falling back to factory settings', err);
@@ -393,8 +417,10 @@ export const useCardStore = create(
                 cardStyles: state.cardStyles,
                 tabConfig: state.tabConfig,
             }),
-            // 嵌套字段逐一合并：旧版本存储里缺的新增字段（如水印）补回默认值
-            merge: (currentState: CardStore, persistedState: unknown) => {
+            // 嵌套字段逐一合并：旧版本存储里缺的新增字段（如水印）补回默认值。
+            // 注意 zustand persist 的签名是 merge(persistedState, currentState)，
+            // 两个参数顺序不能反，否则默认值会覆盖恢复出来的设置。
+            merge: (persistedState: unknown, currentState: CardStore) => {
                 const persisted = (persistedState || {}) as Partial<PersistedSettings>;
                 return {
                     ...currentState,
