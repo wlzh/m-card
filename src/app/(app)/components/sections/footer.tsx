@@ -23,7 +23,7 @@ export const FooterSection = () => {
                         </div>
 
                         <div>
-                            <Link href="https://x.com/FeigelC35583" className="opacity-60 hover:opacity-100">
+                            <Link href="https://x.com/wlzh" className="opacity-60 hover:opacity-100">
                                 Twitter
                             </Link>
                         </div>
@@ -35,7 +35,7 @@ export const FooterSection = () => {
                         <h3 className="font-bold text-lg">Socials</h3>
 
                         <div>
-                            <Link href="https://discord.gg/Prjas7Qh" className="opacity-60 hover:opacity-100">
+                            <Link href="https://discord.com/invite/cj9fusHpjQ" className="opacity-60 hover:opacity-100">
                                 Discord
                             </Link>
                         </div>
@@ -48,7 +48,7 @@ export const FooterSection = () => {
                         Based on X Cards, originally developed by
                         <Link
                             target="_blank"
-                            href="https://x.com/FeigelC35583"
+                            href="https://x.com/wlzh"
                             className="text-primary transition-all border-primary hover:border-b-2 ml-1"
                         >
                             Zane Ryan

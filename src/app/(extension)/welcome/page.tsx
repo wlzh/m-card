@@ -96,7 +96,7 @@ const WelcomePage = () => {
                                     <span className="sr-only">GitHub</span>
                                 </div>
                             </a>
-                            <a target="_blank" rel="noreferrer" href="https://x.com/FeigelC35583">
+                            <a target="_blank" rel="noreferrer" href="https://x.com/wlzh">
                                 <div className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-9 py-2 w-9 px-0">
                                     <svg
                                         className="h-3 w-3 fill-current"
@@ -110,7 +110,7 @@ const WelcomePage = () => {
                                     <span className="sr-only">Twitter</span>
                                 </div>
                             </a>
-                            <a target="_blank" rel="noreferrer" href="https://discord.gg/ZwcKez9E">
+                            <a target="_blank" rel="noreferrer" href="https://discord.com/invite/cj9fusHpjQ">
                                 <div className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-9 py-2 w-9 px-0">
 
                                     <svg

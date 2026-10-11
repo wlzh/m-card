@@ -381,10 +381,10 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
                 <button onClick={() => {
                     setShowCodeDialog(true);
                 }} className=' text-blue-500 mr-4'>Get License</button>
-                <span> DM <a target='_blank' href="https://x.com/IndieDevr" className=' text-blue-500'>@IndieDevr</a>  unlock all features</span>
+                <span> DM <a target='_blank' href="https://x.com/wlzh" className=' text-blue-500'>@wlzh</a>  unlock all features</span>
             </div>
             <div className=' flex  justify-end items-center'>
-                <a target="_blank" href="https://discord.gg/Prjas7Qh">
+                <a target="_blank" href="https://discord.com/invite/cj9fusHpjQ">
                     <svg
                         className="w-4 h-4 mr-2"
                         viewBox="0 0 1024 1024"
