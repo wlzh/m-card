@@ -384,7 +384,18 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
                 ...styles.button,
                 ...(showSettings ? styles.activeButton : {}),
             }}
-            onClick={() => setShowSettings(v => !v)}
+            onClick={() => {
+                const next = !showSettings;
+                setShowSettings(next);
+                if (!next) {
+                    // 收起时重拉默认值：用户刚在内嵌面板里改过，快捷按钮高亮立即跟上
+                    sendMessageToIframe('get-card-defaults', {}, 3000)
+                        .then((defaults) => {
+                            if (defaults) setUIDefaults(defaults);
+                        })
+                        .catch(() => { });
+                }
+            }}
         >
             <Settings className=' h-4 w-4 mr-2' />
             {showSettings ? '收起默认设置' : '默认设置（水印 / 样式）'}
@@ -431,7 +442,13 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
 
 
     useEffect(() => {
-        // 首次打开：从渲染 iframe 拉取本机默认值，按钮高亮与配置面板保存的默认值一致
+        // 新生成会话（点开另一条推特的生成按钮 / 重新打开发图面板）：
+        // 丢弃上一次的临时调整 —— 临时值只属于上一次导出，本次回到本机默认值
+        const stale = useTweetsStore.getState().cardConfig;
+        if (stale && Object.keys(stale).length > 0) {
+            useTweetsStore.setState({ cardConfig: {} });
+        }
+        // 拉取本机默认值，按钮高亮与配置面板保存的默认值一致
         let cancelled = false;
         sendMessageToIframe('get-card-defaults', {}, 3000)
             .then((defaults) => {
@@ -445,7 +462,7 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
         return () => {
             cancelled = true;
         };
-    }, []);
+    }, [tweetInfo]);
 
     useEffect(() => {
         handlePreview(tweetInfo, tweets);
