@@ -1,6 +1,5 @@
 import type { CardStore, XConfig } from "@src/hooks/useCardStore";
 import { create } from "zustand";
-import { fontSizeMap } from "./x-cards-toast/font-control";
 
 export interface TweetControlState {
     showUser: boolean;
@@ -48,11 +47,10 @@ interface TweetCollection {
 
 export const useTweetsStore = create<TweetCollection>(
     (set, get) => ({
-        cardConfig: {
-            padding: 0,
-            scale: 2,
-            fontSize: fontSizeMap['xl'],
-        },
+        // 初始为空：只有用户在生成面板里实际调整过的参数才会写入。
+        // 没动过的参数在渲染侧回落到卡片面板（/independent）保存的本机默认值，
+        // 两边才能保持一致（面板 = 默认值的唯一事实来源）。
+        cardConfig: {},
         setCardConfig: (cardConfig) => {
             const oldCardConfig = get().cardConfig;
             set({

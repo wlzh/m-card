@@ -49,22 +49,31 @@ const Index = () => {
                     }));
                 }
 
-                if (cardConfig?.colorIndex) {
+                // 以下参数只在扩展生成面板里实际调整过才会出现（cardConfig 初始为空），
+                // 未调整的字段保持面板（本机默认值）的设置
+                if (cardConfig?.colorIndex != null) {
                     useCardStore.getState().setColorIndex(cardConfig.colorIndex);
                 }
 
-                if (cardConfig.padding >= 0) {
+                if (cardConfig?.padding >= 0) {
                     useCardStore.getState().updateBackgroundStyles({
                         padding: cardConfig.padding
                     });
                 }
 
-                if (cardConfig.fontSize
-                ) {
-                    useCardStore.getState().updateCardStyles({
-                            fontSize: cardConfig.fontSize as unknown as number,
-                        fontFamily: cardConfig.fontFamily || 'Inter'
-                    });
+                if (cardConfig?.fontSize != null) {
+                    const fontSizePatch: {
+                        fontSize: number,
+                        fontFamily?: string,
+                    } = {
+                        // cardStyles.fontSize 类型标注是 number，但 toast 侧实际写入 '1.25rem' 这类字符串
+                        fontSize: cardConfig.fontSize as unknown as number,
+                    };
+                    // 只在明确选择了字体时才覆盖，否则保留面板默认字体
+                    if (cardConfig.fontFamily) {
+                        fontSizePatch.fontFamily = cardConfig.fontFamily;
+                    }
+                    useCardStore.getState().updateCardStyles(fontSizePatch);
                 }
 
                 // if (cardConfig.fontFamily) {
@@ -96,9 +105,11 @@ const Index = () => {
 
                 requestAnimationFrame(async () => {
                     try {
+                        // 导出格式/倍率：优先用生成面板里选的，否则用面板保存的默认值
+                        const currentStore = useCardStore.getState();
                         const dataUrl = await generateImage({
-                            format: cardConfig?.format || 'png',
-                            scale: cardConfig?.scale || 2,
+                            format: cardConfig?.format || currentStore.cardStyles.exportFormat || 'png',
+                            scale: cardConfig?.scale || currentStore.cardStyles.exportScale || 2,
                             fontFamily: cardConfig.fontFamily || false,
                         });
                         (event.source as Window)?.postMessage({

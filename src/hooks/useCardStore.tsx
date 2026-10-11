@@ -161,6 +161,9 @@ export interface CardStore {
         borderWidth: number,
         borderColor?: string,
         imageLayout?: string,
+        // 默认导出格式与倍率：扩展生成面板未指定时使用
+        exportFormat?: string,
+        exportScale?: number,
         controls: TweetControlState
         fontFamily: string,
         watermark: {
@@ -234,6 +237,8 @@ export const factorySettings: PersistedSettings = {
         noiseTextureOpacity: 0.05,
         texturePosition: 'center',
         borderWidth: 0,
+        exportFormat: 'png',
+        exportScale: 2,
         controls: {
             showUser: true,
             showActions: true,

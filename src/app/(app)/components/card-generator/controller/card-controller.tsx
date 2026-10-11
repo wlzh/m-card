@@ -1,10 +1,20 @@
 import { AccordionContent, AccordionItem, AccordionTrigger } from "@components/ui/accordion";
 import { ColorPicker } from "@components/ui/color-picker";
 import { Slider } from "@components/ui/slider";
+import { Switch } from "@components/ui/switch";
 import { useCardStore } from "@src/hooks/useCardStore";
 import { useState } from "react";
 import { RadioGroup, RadioGroupItem } from "@components/ui/radio-group";
 import LayoutOptions from "@src/components/extension/layout-options";
+
+// 卡片显示元素开关，与扩展生成面板（toast）的 CONTROLS 一一对应
+const controlToggles: { key: string, label: string }[] = [
+    { key: 'showUser', label: '用户信息' },
+    { key: 'showActions', label: '互动数据' },
+    { key: 'showTime', label: '时间' },
+    { key: 'showFooter', label: '脚注' },
+    { key: 'showLogo', label: 'Logo' },
+];
 export const CardController = () => {
     const cardStyles = useCardStore((state) => state.cardStyles);
     const updateCardStyles = useCardStore((state) => state.updateCardStyles);
@@ -172,6 +182,32 @@ export const CardController = () => {
                         </RadioGroup>
                     </div>
                 </label>
+
+                {/* 显示元素开关：与扩展生成面板的 CONTROLS 对应，作为其默认值 */}
+                <div className="flex flex-col gap-y-1 py-1">
+                    <span className="text-[13px]">Controls（显示元素，扩展生成默认值）</span>
+                    {controlToggles.map(({ key, label }) => (
+                        <label
+                            key={key}
+                            className="flex min-h-[32px] flex-row items-center justify-start transition-opacity duration-[0.15s] ease-[ease-in-out]"
+                        >
+                            <span className="grow-[2] text-[13px]">{label}</span>
+                            <div className="inline-flex">
+                                <Switch
+                                    checked={cardStyles.controls?.[key] ?? true}
+                                    onCheckedChange={(v) => {
+                                        updateCardStyles({
+                                            controls: {
+                                                ...cardStyles.controls,
+                                                [key]: v,
+                                            },
+                                        });
+                                    }}
+                                />
+                            </div>
+                        </label>
+                    ))}
+                </div>
 
             </AccordionContent>
         </AccordionItem>

@@ -1,7 +1,7 @@
 import * as _ from 'lodash-es';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { PresetColorList } from '../preset-color-list';
-import { Copy, Download, Loader2, X } from 'lucide-react';
+import { Copy, Download, Loader2, Settings, X } from 'lucide-react';
 import { sendMessageToIframe } from '@src/app/utils';
 import { CardWidths, type XConfig } from '@src/hooks/useCardStore';
 
@@ -359,11 +359,25 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
 
         <FontControl></FontControl>
 
-        <ScaleControl value={cardConfig.scale} onChange={v => {
+        <ScaleControl value={cardConfig.scale ?? 2} onChange={v => {
             setCardConfig({
                 scale: v,
             });
         }} />
+
+        {/* 直达卡片配置面板：水印、padding、字号等所有默认值在那里设置并保存 */}
+        <button
+            style={styles.button}
+            onClick={() =>
+                window.open(
+                    process.env.PLASMO_PUBLIC_RENDERER_URL || "http://localhost:1947/independent",
+                    '_blank'
+                )
+            }
+        >
+            <Settings className=' h-4 w-4 mr-2' />
+            打开卡片面板 · 设置默认值
+        </button>
 
         <button style={styles.button} onClick={handleDownloadImage}>
             <Download className=' h-4 w-4 mr-2' />
