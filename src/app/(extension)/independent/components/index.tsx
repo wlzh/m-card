@@ -33,6 +33,17 @@ const Index = () => {
                     cardConfig: CardConfig,
                 }
                 const { tweetInfo, cardConfig } = body;
+
+                // 关键：生成前强制从 IndexedDB 重新读取本机默认值。
+                // 这个 iframe 是常驻的，store 只在页面加载时 rehydrate 一次；
+                // 用户随后在面板（另一个标签页）里改的水印/宽度等默认值，
+                // 不会自动同步到这里的内存 store，必须显式重读。
+                try {
+                    await useCardStore.persist.rehydrate();
+                } catch (rehydrateError) {
+                    console.warn('rehydrate before generation failed, using in-memory settings', rehydrateError);
+                }
+
                 useCardStore.getState().setXConfig(tweetInfo)
 
                 // 快照面板设置：生成时临时套用扩展传来的参数（padding/fontSize 等），
