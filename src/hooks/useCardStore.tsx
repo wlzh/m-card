@@ -304,9 +304,10 @@ const flushPendingWrites = () => {
 };
 
 // 跨上下文实时同步：同源的面板标签页 / 生图窗口内嵌面板 / 隐藏渲染 iframe
-// 通过 BroadcastChannel 互相通知设置变化，收到即重读 IndexedDB——
-// 改水印后生成立刻用新值，不再依赖「生成时机重读」这一条路径。
-// 仅在值变化时广播：rehydrate 的回写值与上次相同会被抑制，防止广播回环。
+// 通过 BroadcastChannel 互相同步设置变化。
+// ⚠️ 广播必须携带完整新值：若只发「变了」通知、让对端去重读 IndexedDB，
+// 对端会在写盘防抖(300ms)窗口内读到旧值，并把旧值回写覆盖新值——
+// 用户表现为「改了默认值但没存住」。
 let lastBroadcastValue = '';
 let settingsChannel: BroadcastChannel | null = null;
 const getSettingsChannel = (): BroadcastChannel | null => {
@@ -316,12 +317,17 @@ const getSettingsChannel = (): BroadcastChannel | null => {
     try {
         settingsChannel = new BroadcastChannel('mcard-settings');
         settingsChannel.onmessage = async (ev: MessageEvent) => {
-            if ((ev.data as any)?.type !== 'updated') return;
+            const msg = ev.data as { type?: string; value?: string } | null;
+            if (msg?.type !== 'updated' || typeof msg.value !== 'string') return;
             if (persistencePauseCount > 0) return; // 生成中不打扰临时覆盖
             try {
+                // 先把广播带来的最新值直接落盘（绕过防抖），再重读——
+                // 重读必然读到新值，回写也不会产生旧值覆盖
+                await idbSet('card-settings', msg.value);
+                lastBroadcastValue = msg.value; // 对端应用不回播，防回环
                 await useCardStore.persist.rehydrate();
             } catch {
-                // 重读失败则维持内存值，下次生成前还有兜底 rehydrate
+                // 同步失败则维持内存值，下次生成前还有兜底 rehydrate
             }
         };
     } catch {
@@ -333,7 +339,7 @@ const getSettingsChannel = (): BroadcastChannel | null => {
 const broadcastUpdate = (value: string) => {
     if (value === lastBroadcastValue) return;
     lastBroadcastValue = value;
-    getSettingsChannel()?.postMessage({ type: 'updated' });
+    getSettingsChannel()?.postMessage({ type: 'updated', value });
 };
 
 const storage: StateStorage = {
