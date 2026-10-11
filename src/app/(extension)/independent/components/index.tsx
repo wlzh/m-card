@@ -1,6 +1,6 @@
 "use client"
 import { useEffect, useRef } from "react";
-import { useCardStore, type XConfig } from "@src/hooks/useCardStore";
+import { useCardStore, setPersistencePaused, persistSettingsNow, type XConfig } from "@src/hooks/useCardStore";
 import { CardGenerator } from "../../../(app)/components/card-generator";
 import * as _ from "lodash-es"
 import { generateImage } from "@src/app/utils/image";
@@ -74,7 +74,8 @@ const Index = () => {
                 // 快照面板设置：生成时临时套用扩展传来的参数（padding/fontSize 等），
                 // 生成完成后恢复，避免这些临时值写回 IndexedDB 冲掉用户保存的默认值。
                 // 想改默认值请在面板里改并 Save as Default —— 那是唯一的事实来源。
-                // 快照挂在模块级：并发生成时复用第一份（用户默认值），防止把覆盖值快照进去
+                // 快照挂在模块级：并发生成时复用第一份（用户默认值），防止把覆盖值快照进去。
+                // 同时暂停持久化（计数式）：临时值即使触发 set 也不会经防抖落盘
                 if (!pendingGenerationSnapshot) {
                     const storeBeforeGeneration = useCardStore.getState();
                     pendingGenerationSnapshot = JSON.parse(JSON.stringify({
@@ -84,6 +85,7 @@ const Index = () => {
                         tabConfig: storeBeforeGeneration.tabConfig,
                     }));
                 }
+                setPersistencePaused(true);
 
                 // 以下参数只在扩展生成面板里实际调整过才会出现（cardConfig 初始为空），
                 // 未调整的字段保持面板（本机默认值）的设置
@@ -102,8 +104,7 @@ const Index = () => {
                         fontSize: number,
                         fontFamily?: string,
                     } = {
-                        // cardStyles.fontSize 类型标注是 number，但 toast 侧实际写入 '1.25rem' 这类字符串
-                        fontSize: cardConfig.fontSize as unknown as number,
+                        fontSize: cardConfig.fontSize,
                     };
                     // 只在明确选择了字体时才覆盖，否则保留面板默认字体
                     if (cardConfig.fontFamily) {
@@ -158,11 +159,14 @@ const Index = () => {
                             value: { error: error instanceof Error ? error.message : 'Card generation failed' }
                         }, event.origin);
                     } finally {
-                        // 图片已生成完毕（DOM 截图结束），恢复面板默认设置
+                        // 图片已生成完毕（DOM 截图结束），恢复面板默认设置并解除持久化暂停
                         if (pendingGenerationSnapshot) {
                             useCardStore.setState(pendingGenerationSnapshot);
                             pendingGenerationSnapshot = null;
                         }
+                        setPersistencePaused(false);
+                        // 解除暂停后强制落盘一次快照值，兜底保证存储 == 内存（防抖期间可能有一次被暂停丢弃）
+                        await persistSettingsNow();
                     }
                 });
             }

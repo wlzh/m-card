@@ -276,6 +276,22 @@ let pendingWrites = new Map<string, string>();
 // 首次 getItem 成功前禁止写入：避免挂载期的任何 set()
 // （如示例头像加载触发 addLoadedImage）把出厂默认值写进存储、覆盖用户已有设置
 let hydratedFromStorage = false;
+// 生成期间暂停落盘（计数式，支持并发生成）：iframe 渲染时临时套用的
+// 参数（padding/width 等）不会经防抖写进 IndexedDB 污染默认值
+let persistencePauseCount = 0;
+
+export const setPersistencePaused = (paused: boolean) => {
+    persistencePauseCount = Math.max(0, persistencePauseCount + (paused ? 1 : -1));
+};
+
+// 立即把当前面板设置完整落盘（绕过防抖），用于恢复后兜底
+export const persistSettingsNow = async () => {
+    const { colorIndex, backgroundStyles, cardStyles, tabConfig } = useCardStore.getState();
+    await idbSet('card-settings', JSON.stringify({
+        state: { colorIndex, backgroundStyles, cardStyles, tabConfig },
+        version: 1,
+    }));
+};
 
 const flushPendingWrites = () => {
     persistFlushTimer = null;
@@ -295,7 +311,7 @@ const storage: StateStorage = {
         return value || null
     },
     setItem: async (name: string, value: string): Promise<void> => {
-        if (!hydratedFromStorage) {
+        if (!hydratedFromStorage || persistencePauseCount > 0) {
             return;
         }
         pendingWrites.set(name, value);

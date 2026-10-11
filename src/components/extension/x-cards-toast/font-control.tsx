@@ -54,10 +54,10 @@ const FontControl = () => {
     const [customFontFamily, setCustomFontFamily] = useState('');
 
     // 默认值拉取完成后反查档位；不在档位内（面板自定义值）保持不高亮
-    const activeSizeKey = selectedFontSize
-        ?? (defaultFontSize != null
-            ? Object.keys(fontSizeMap).find(k => fontSizeMap[k] === defaultFontSize) ?? ''
-            : '');
+    const defaultSizeKey = defaultFontSize != null
+        ? Object.keys(fontSizeMap).find(k => fontSizeMap[k] === defaultFontSize) ?? ''
+        : '';
+    const activeSizeKey = selectedFontSize ?? defaultSizeKey;
 
     const handleSelectFontSize = useCallback((sizeKey) => {
         setSelectedFontSize(sizeKey);
@@ -111,7 +111,9 @@ const FontControl = () => {
 
     return (
         <div>
-            <h3 className="text-sm font-semibold mb-2">FONT SIZE</h3>
+            <h3 className="text-sm font-semibold mb-2">
+                FONT SIZE{defaultFontSize != null && !defaultSizeKey ? `（自定义 ${defaultFontSize}px）` : ''}
+            </h3>
             {renderFontSizeControl}
             {/* <div className="mt-4">
                 <h3 className="text-sm font-semibold mb-2">FONT FAMILY</h3>
