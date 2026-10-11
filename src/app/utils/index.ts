@@ -127,7 +127,7 @@ export const downloadImage = async (tweetInfo: XConfig | XConfig[], cardConfig =
   const value = await sendMessageToIframe('generate-card-local', {
     tweetInfo: format2Array,
     cardConfig,
-  }, 3000);
+  }, 20000);
   const { url, dataUrl } = value;
   const xName = 'm-card'
   const link = document.createElement('a');

@@ -63,9 +63,10 @@ export const TwitterCard: React.FC<TwitterCardProps> = ({ xConfig, backgroundSty
                             className="relative z-20 transition-all w-full card-holder"
                             style={{
                                 transform: `scale(${cardStyles.scale}%)`,
-                                // pointer-events: none;
-                                // fontFamily: cardStyles?.fontFamily && `'${cardStyles?.fontFamily}', sans-serif`,
-                                // fontFamily: 'ui-sans-serif',
+                                // 面板 Font → Select Font 选择的字体（默认 sans-serif 不加，走系统栈）
+                                ...(cardStyles?.fontFamily && cardStyles.fontFamily !== 'sans-serif'
+                                    ? { fontFamily: `'${cardStyles.fontFamily}', sans-serif` }
+                                    : {}),
                             }}
                         >
                             {/* Card body */}
@@ -81,7 +82,10 @@ export const TwitterCard: React.FC<TwitterCardProps> = ({ xConfig, backgroundSty
                                     overflow: 'visible',
                                     zIndex: -1,
                                     background: `linear-gradient(150deg, rgba(255,255,255,0.5), rgba(255,255,255,0.95) 80%)`,
-                                    // boxShadow: 'inset 0 0 0 2px rgba(255,255,255,0.15)',
+                                    // 面板 Card → Border Width / Border Color
+                                    borderWidth: `${cardStyles.borderWidth || 0}px`,
+                                    borderStyle: cardStyles.borderWidth ? 'solid' : 'none',
+                                    borderColor: cardStyles.borderColor || 'transparent',
                                     borderRadius: `${backgroundStyles.borderRadius}px`,
                                 }}
                             >
@@ -195,8 +199,9 @@ const CardBody: React.FC<{
     xConfig: XConfig,
     cardStyles: CardStore['cardStyles'],
 }> = ({ xConfig, cardStyles }) => {
-    //  cardStyles.imageLayout ||
-    const layout = xConfig.images.length >= 2 ? 'grid4' : 'vertical';
+    // 面板 Card → Image Layout 手动指定时优先生效，否则按图片数量自动
+    const layout = (cardStyles.imageLayout as 'vertical' | 'grid2' | 'grid4')
+        || (xConfig.images.length >= 2 ? 'grid4' : 'vertical');
 
     const images = _.compact(
         [

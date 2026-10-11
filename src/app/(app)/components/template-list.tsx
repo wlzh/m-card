@@ -6,7 +6,6 @@ import { X } from "lucide-react";
 export const TemplateList = () => {
     const templates = useTemplatesStore(state => state.templates);
     const delTemplate = useTemplatesStore(state => state.delTemplate);
-    const setFontStyles = useCardStore(state => state.setFontStyles);
     const setColorIndex = useCardStore(state => state.setColorIndex);
     const updateBackgroundStyles = useCardStore(state => state.updateBackgroundStyles);
     const updateCardStyles = useCardStore(state => state.updateCardStyles);

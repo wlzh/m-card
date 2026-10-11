@@ -105,23 +105,7 @@ export const CardController = () => {
                     ></ColorPicker>
                 </label>
 
-                <label className="flex min-h-[40px] flex-row items-center justify-start transition-opacity duration-[0.15s] ease-[ease-in-out]  py-1">
-                    <span className="grow-[2] text-[13px]">Style</span>
-                    <RadioGroup value={cardStyles.style} onValueChange={(v) => {
-                        updateCardStyles({
-                            style: v,
-                        });
-                    }}>
-                        <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="article" id="article" />
-                            <span>article</span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="posts" id="posts" />
-                            <span>posts</span>
-                        </div>
-                    </RadioGroup>
-                </label>
+                {/* Style（posts/article）单选暂无渲染差异，隐藏待后续实现后再放开 */}
 
                 <label className="flex min-h-[40px] flex-row items-center justify-start transition-opacity duration-[0.15s] ease-[ease-in-out]  py-1">
                     <span className="grow-[2] text-[13px]">Border Radius</span>

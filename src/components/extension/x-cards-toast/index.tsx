@@ -149,12 +149,13 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
             toast.error('Asset bundles can only be downloaded');
             return;
         }
+        // 长文章/4x 高倍率导出耗时明显,正式导出给足 20s
         const data = await sendMessageToIframe('generate-card-local', {
             tweetInfo: tweets,
             cardConfig: {
                 ...cardConfig,
             },
-        }, 3000);
+        }, 20000);
         const imageSrc = data.dataUrl;
         const [, mimeType] = imageSrc.match(/^data:(.+);base64,(.+)$/);
         const blob = await fetch(imageSrc).then(res => res.blob());
@@ -192,12 +193,13 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
             return;
         }
         const xName = 'm-card'
+        // 长文章/4x 高倍率导出耗时明显,正式导出给足 20s
         const data = await sendMessageToIframe('generate-card-local', {
             tweetInfo: tweets,
             cardConfig: {
                 ...cardConfig,
             },
-        }, 3000);
+        }, 20000);
         const imageSrc = data.dataUrl;
         const link = document.createElement('a');
         link.download = `${xName}.${activeFormat || 'png'}`
@@ -219,7 +221,7 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
                     ...cardConfig,
                     scale: 2,
                 },
-            }, 3000);
+            }, 8000);
             srcRef.current = value.dataUrl;
             setImageSrc(value.dataUrl);
             return value.dataUrl;

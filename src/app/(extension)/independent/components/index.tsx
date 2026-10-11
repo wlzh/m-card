@@ -59,6 +59,22 @@ const Index = () => {
                 }
                 const { tweetInfo, cardConfig } = body;
 
+                // 自愈：对比线上最新构建指纹，站点已更新而本 iframe 还是旧代码时
+                // 自动重载（本次请求作废，调用方重试后即运行新代码）——
+                // 消除「改了默认值但生成用旧值」的一类根因（常驻 iframe 代码过期）。
+                try {
+                    const liveHtml = await fetch(location.href, { cache: 'no-store' }).then(r => r.text());
+                    const liveChunk = (liveHtml.match(/page-[a-f0-9]+\.js/) || [])[0];
+                    const myScript = document.querySelector('script[src*="/page-"]') as HTMLScriptElement | null;
+                    const myChunk = myScript ? (myScript.src.match(/page-[a-f0-9]+\.js/) || [])[0] : '';
+                    if (liveChunk && myChunk && liveChunk !== myChunk) {
+                        location.reload();
+                        return;
+                    }
+                } catch {
+                    // 检测失败不阻塞生成
+                }
+
                 // 关键：生成前强制从 IndexedDB 重新读取本机默认值。
                 // 这个 iframe 是常驻的，store 只在页面加载时 rehydrate 一次；
                 // 用户随后在面板（另一个标签页）里改的水印/宽度等默认值，

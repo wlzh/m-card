@@ -12,7 +12,13 @@ const exportScales = [1, 2, 3, 4];
 export const ExportTab = () => {
     const exportFormat = useCardStore((state) => state.cardStyles.exportFormat);
     const exportScale = useCardStore((state) => state.cardStyles.exportScale);
+    const cardStyles = useCardStore((state) => state.cardStyles);
     const updateCardStyles = useCardStore((state) => state.updateCardStyles);
+    // 导出按钮同样遵循默认倍率与默认字体(与扩展生成侧语义一致)
+    const exportOpts: { scale: number; fontFamily: string | false } = {
+        scale: exportScale ?? 2,
+        fontFamily: cardStyles.fontFamily && cardStyles.fontFamily !== 'sans-serif' ? cardStyles.fontFamily : false,
+    };
 
     return (
         <AccordionItem value={'export'} className=" border  border-destructive ">
@@ -21,9 +27,9 @@ export const ExportTab = () => {
                 <label className="flex min-h-[40px] flex-col gap-y-2  justify-start transition-opacity duration-[0.15s] ease-[ease-in-out]  py-1">
                     <span className=" text-[13px]">image type</span>
                     <div className="mt-4 flex space-x-2">
-                        <Button className="" size="sm" onClick={() => exportImage('png')}>As PNG</Button>
-                        <Button size="sm" onClick={() => exportImage('jpeg')}>As JPEG</Button>
-                        <Button size="sm" onClick={() => exportImage('svg')}>As SVG</Button>
+                        <Button className="" size="sm" onClick={() => exportImage('png', exportOpts)}>As PNG</Button>
+                        <Button size="sm" onClick={() => exportImage('jpeg', exportOpts)}>As JPEG</Button>
+                        <Button size="sm" onClick={() => exportImage('svg', exportOpts)}>As SVG</Button>
                     </div>
                 </label>
 

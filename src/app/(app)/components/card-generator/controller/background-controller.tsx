@@ -189,23 +189,7 @@ export const BackgroundController = (props) => {
 
 
 
-                {/* Background Width */}
-                <label className="flex min-h-[40px] flex-col gap-y-2  justify-start transition-opacity duration-[0.15s] ease-[ease-in-out]  py-1">
-                    <span className=" text-[13px]">Width</span>
-                    <div className=" w-full">
-                        <Slider step={1}
-                            value={[backgroundStyles.backgroundWidth]}
-                            max={100}
-                            min={50}
-                            onValueChange={(v) => {
-                                updateBackgroundStyles({
-                                    backgroundWidth: v[0],
-                                });
-                            }}
-
-                        ></Slider>
-                    </div>
-                </label>
+                {/* Background Width 滑块无渲染效果,隐藏(backgroundWidth 未被消费) */}
                 {/* background padding */}
                 <label className="flex min-h-[40px] flex-col gap-y-2  justify-start transition-opacity duration-[0.15s] ease-[ease-in-out]  py-1">
                     <span className=" text-[13px]">Padding</span>

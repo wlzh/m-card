@@ -28,7 +28,7 @@ export const CardButton: React.FC<{
             const imageSrc = await pRetry(async () => {
                 return copyImage(tweetInfo, cardConfig.current);
             }, {
-                retries: 10,
+                retries: 2,
             });
 
             const thread = getPostThread(postElement);
