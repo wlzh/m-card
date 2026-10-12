@@ -1,7 +1,7 @@
 {
   "name": "m-card",
   "displayName": "M.Card",
-  "version": "0.3.6",
+  "version": "0.3.7",
   "description": "Self-hosted Chrome extension for exporting X posts as cards and portable data.",
   "packageManager": "pnpm@9.15.4",
   "keywords": [

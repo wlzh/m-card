@@ -236,6 +236,11 @@ export function extractTweetInfo(postElement: Element | null) {
   // https://pbs.twimg.com/media/GUjKHbca8AEeT7e?format=jpg&name=small
   // https://pbs.twimg.com/media/GUjKHbca8AEeT7e?format=jpg&name=large
   tweet.images = tweet.images.map(img => img.replace(/name=\w+/, 'name=large'));
+  if (tweet.articleBlocks) {
+    tweet.articleBlocks = tweet.articleBlocks.map((block) => block.type === 'image'
+      ? { ...block, src: block.src.replace(/name=\w+/, 'name=large') }
+      : block);
+  }
 
   // console.log('tweet.images', tweet.images);
 

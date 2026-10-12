@@ -1,7 +1,6 @@
 import { DynamicStyleTippyComponent } from "@src/app/(app)/components/dynamic-style-tippy";
-import { useMemo, useRef, useState } from "react";
-import pRetry from 'p-retry';
-import { copyImage, extractTweetInfo, getPostThread } from "@src/app/utils";
+import { useMemo, useState } from "react";
+import { extractTweetInfo, getPostThread } from "@src/app/utils";
 import toast from 'react-hot-toast';
 import * as _ from 'lodash-es';
 import { PreviewToast } from "./x-cards-toast";
@@ -14,34 +13,23 @@ export const CardButton: React.FC<{
 }> = ({ anchor }) => {
     const [isLoading, setIsLoading] = useState(false);
 
-    const cardConfig = useRef({});
-
-    const handleCopyAsCellCard = async (e) => {
+    const handlePreview = (e) => {
         e.stopPropagation();
         e.preventDefault();
         if (isLoading) return;
         setIsLoading(true);
+        let previewOpened = false;
         try {
             const postElement = anchor.element.closest('article[data-testid="tweet"]');
             const tweetInfo = extractTweetInfo(postElement)
             if (!tweetInfo) throw new Error('Unable to read this post from the current X page');
-            const imageSrc = await pRetry(async () => {
-                return copyImage(tweetInfo, cardConfig.current);
-            }, {
-                retries: 2,
-            });
-
             const thread = getPostThread(postElement);
             const tweetInfos = _.compact(thread?.map(e => extractTweetInfo(e)));
 
-            // toast.success("👏  Copy the card to clipboard", {
-            //     duration: 500,
-            // })
-
             useTweetsStore.setState((state) => {
-                state.tweets = tweetInfos;
+                state.tweets = tweetInfos.length ? tweetInfos : [tweetInfo];
                 state.activeTab = 'linear';
-                state.imageSrc = imageSrc;
+                state.imageSrc = '';
                 return state;
             });
             toast.remove('preview-toast');
@@ -50,24 +38,26 @@ export const CardButton: React.FC<{
                     anchor={anchor}
                     tweetInfos={tweetInfos}
                     tweetInfo={tweetInfo}
+                    onInitialGenerationEnd={() => setIsLoading(false)}
                 ></PreviewToast>)
             }, {
                 id: 'preview-toast',
                 duration: Infinity,
                 position: 'top-right',
             })
+            previewOpened = true;
         } catch (error) {
             toast.error(`Error copying card: ${error.message}`);
             console.error("Error generating card:", error);
         } finally {
-            setIsLoading(false);
+            if (!previewOpened) setIsLoading(false);
         }
     }
 
     const handleDefaultClick = async (e) => {
         e.stopPropagation();
         e.preventDefault();
-        await handleCopyAsCellCard(e);
+        handlePreview(e);
     }
 
     const handleClick = async (e) => {

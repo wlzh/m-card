@@ -34,7 +34,7 @@ export const InputController = () => {
                         <span className=" text-[13px]">text</span>
                         <div className=" px-1.5">
                             <Textarea rows={10} value={first.text ?? ''} onChange={(e) => {
-                                updateFirst({ text: e.target.value });
+                                updateFirst({ text: e.target.value, articleBlocks: undefined });
                             }}></Textarea>
                         </div>
                     </label>

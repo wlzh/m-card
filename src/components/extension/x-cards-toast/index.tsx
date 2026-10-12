@@ -24,9 +24,10 @@ interface PreviewToastProps {
     tweetInfo: XConfig;
     tweetInfos: XConfig[];
     anchor: PlasmoCSUIProps['anchor'],
+    onInitialGenerationEnd?: () => void;
 }
 
-export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfos, anchor, }) => {
+export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfos, anchor, onInitialGenerationEnd }) => {
     const [isLoading, setIsLoading] = useState(false);
     const showCodeDialog = false;
     const setShowCodeDialog = (_value: boolean) => undefined;
@@ -47,6 +48,7 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
     // 内嵌默认设置面板（展开/收起）：完整配置界面直接嵌在生图窗口里，
     // 与隐藏渲染 iframe 同源，共享本机 IndexedDB —— 改完即存，生成即刻生效
     const [showSettings, setShowSettings] = useState(false);
+    const initialGenerationPending = useRef(true);
     const settingsPanelUrl = process.env.PLASMO_PUBLIC_RENDERER_URL || "http://localhost:1947/independent";
 
     // 默认宽度反查档位（sm/md/lg/xl）；面板自定义宽度不在档位内则不高亮
@@ -228,6 +230,10 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
             toast.error(error instanceof Error ? error.message : 'Card generation failed');
         } finally {
             setIsLoading(false);
+            if (initialGenerationPending.current) {
+                initialGenerationPending.current = false;
+                onInitialGenerationEnd?.();
+            }
         }
     }
 

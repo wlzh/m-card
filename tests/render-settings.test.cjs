@@ -63,6 +63,20 @@ test('all layouts retain all eight article images', () => {
     assert.equal(new JSDOM(html).window.document.querySelectorAll('img').length, 8);
   }
 });
+test('full articles render images between their surrounding text blocks', () => {
+  const article = new JSDOM(renderToStaticMarkup(React.createElement(output.TwitterCard, {
+    cardStyles: { width: 768, fontSize: 20, controls: {} },
+    backgroundStyles: { padding: 24, backgroundOpacity: 1, backgroundBlur: 0 },
+    xConfig: [{ username: 'AUTHOR', avatar: '', title: 'TITLE', text: 'FLAT', images: ['/cover.png'], articleMode: 'full', articleBlocks: [
+      { type: 'paragraph', text: 'BEFORE' },
+      { type: 'image', src: '/inline.png', alt: 'INLINE' },
+      { type: 'paragraph', text: 'AFTER' },
+    ], time: 0, replies: 0, shares: 0, likes: 0 }],
+  }))).window.document;
+  const body = article.querySelector('.tweet-content');
+  assert.deepEqual(Array.from(body.children).map((node) => node.tagName === 'IMG' ? node.getAttribute('src') : node.textContent), ['BEFORE', '/inline.png', 'AFTER']);
+  assert.equal(article.body.textContent.includes('FLAT'), false);
+});
 test('radial preset preview always emits a finite gradient stop', () => {
   const baseSettings = {
     backgroundFillType: 'Radial',

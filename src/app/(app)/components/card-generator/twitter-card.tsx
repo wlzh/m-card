@@ -206,6 +206,13 @@ const CardBody: React.FC<{
             ...(xConfig?.links?.map((link) => link.src) || []),
         ]
     ))
+    const articleImageSources = new Set(
+        xConfig.articleBlocks?.flatMap((block) => block.type === 'image' ? [block.src] : []) || []
+    );
+    const coverImages = xConfig.articleMode === 'full'
+        ? xConfig.images.filter((src) => !articleImageSources.has(src))
+        : [];
+    const hasStructuredArticle = xConfig.articleMode === 'full' && Boolean(xConfig.articleBlocks?.length);
 
     return (
         <div className="flex-grow flex flex-col justify-center">
@@ -225,13 +232,33 @@ const CardBody: React.FC<{
                     {xConfig.title}
                 </div>
             ) : null}
-            <div className={cn("tweet-content text-lg leading-normal pointer-events-none mb-[1em]    ")} style={{ fontSize: cardStyles.fontSize, overflowWrap: 'anywhere' }}>
-                <div className="content whitespace-pre-wrap" dir="auto">
-                    {xConfig.text}
+            {coverImages.length > 0 && <div className="mb-[1em]"><ImageLayout images={coverImages} layout="vertical" /></div>}
+            {hasStructuredArticle ? (
+                <div className="tweet-content pointer-events-none" style={{ fontSize: cardStyles.fontSize, overflowWrap: 'anywhere' }} dir="auto">
+                    {xConfig.articleBlocks!.map((block, index) => {
+                        if (block.type === 'image') return (
+                            <img key={`${index}-${block.src}`} src={block.src} alt={block.alt || `Article image ${index + 1}`}
+                                className="w-full h-auto object-contain" style={{ margin: '0.9em 0 1.1em' }} loading="eager" />
+                        );
+                        if (block.type === 'divider') return <div key={index} style={{ borderTop: '1px solid currentColor', opacity: 0.18, margin: '1.25em 0' }} />;
+                        if (block.type === 'heading') return <div key={index} style={{ fontSize: '1.18em', lineHeight: 1.35, fontWeight: 700, margin: '1.15em 0 0.55em' }}>{block.text}</div>;
+                        if (block.type === 'quote') return <div key={index} style={{ borderLeft: '3px solid currentColor', paddingLeft: '0.85em', opacity: 0.82, margin: '0.75em 0 1em', whiteSpace: 'pre-wrap' }}>{block.text}</div>;
+                        if (block.type === 'list') {
+                            const List = block.ordered ? 'ol' : 'ul';
+                            return <List key={index} style={{ listStyle: block.ordered ? 'decimal' : 'disc', paddingLeft: '1.5em', margin: '0.55em 0 1em' }}>
+                                {block.items.map((item, itemIndex) => <li key={itemIndex} style={{ marginBottom: '0.35em' }}>{item}</li>)}
+                            </List>;
+                        }
+                        return <div key={index} style={{ lineHeight: 1.55, marginBottom: '0.85em', whiteSpace: 'pre-wrap' }}>{block.text}</div>;
+                    })}
                 </div>
-            </div>
+            ) : (
+                <div className={cn("tweet-content text-lg leading-normal pointer-events-none mb-[1em]")} style={{ fontSize: cardStyles.fontSize, overflowWrap: 'anywhere' }}>
+                    <div className="content whitespace-pre-wrap" dir="auto">{xConfig.text}</div>
+                </div>
+            )}
             {xConfig.articleMode === 'preview' && <p className="text-xs mb-3">文章摘要 · 打开文章后可生成全文</p>}
-            {images && images.length > 0 && (
+            {!hasStructuredArticle && images && images.length > 0 && (
                 <ImageLayout
                     images={images}
                     layout={layout}

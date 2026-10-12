@@ -13,8 +13,32 @@ const extract = html => exportsObject.extractPostContent(new JSDOM(html).window.
 test('full article uses real X title and rich body, not first heading', () => {
   const result = extract('<div data-testid="twitter-article-title">Article title</div><div data-testid="twitterArticleRichTextView"><div data-testid="longformRichTextComponent"><h2>Section</h2><p>Body text</p></div></div>');
   assert.equal(result.title, 'Article title');
-  assert.equal(result.text, 'SectionBody text');
+  assert.equal(result.text, 'Section\n\nBody text');
   assert.equal(result.articleMode, 'full');
+  assert.deepEqual(JSON.parse(JSON.stringify(result.articleBlocks)), [
+    { type: 'heading', text: 'Section' },
+    { type: 'paragraph', text: 'Body text' },
+  ]);
+});
+test('full article keeps text, lists and images in DOM order', () => {
+  const result = extract(`<div data-testid="twitterArticleRichTextView"><div><div>
+    <p data-block="true">Before</p>
+    <section data-block="true"><img src="https://pbs.twimg.com/media/a?name=medium" alt="Step"></section>
+    <h2 data-block="true">Next</h2>
+    <ol><li>One</li><li>Two</li></ol>
+    <blockquote data-block="true">Quote</blockquote>
+    <section data-block="true"><div role="separator"></div></section>
+    <p data-block="true">After</p>
+  </div></div></div>`);
+  assert.deepEqual(JSON.parse(JSON.stringify(result.articleBlocks)), [
+    { type: 'paragraph', text: 'Before' },
+    { type: 'image', src: 'https://pbs.twimg.com/media/a?name=medium', alt: 'Step' },
+    { type: 'heading', text: 'Next' },
+    { type: 'list', items: ['One', 'Two'], ordered: true },
+    { type: 'quote', text: 'Quote' },
+    { type: 'divider' },
+    { type: 'paragraph', text: 'After' },
+  ]);
 });
 test('timeline article captures title and excerpt', () => {
   const result = extract('<div><div data-testid="article-cover-image"><img></div><div><div><div dir="auto">Title</div></div><div dir="auto">Excerpt...</div></div></div>');

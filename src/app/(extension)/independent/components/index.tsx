@@ -167,6 +167,13 @@ const Index = () => {
                     requestAnimationFrame(async () => {
                         await new Promise((r) => setTimeout(r, 120));
                         try {
+                            const cardImages = Array.from(document.querySelectorAll<HTMLImageElement>('#card img'));
+                            await Promise.all(cardImages.filter((image) => !image.complete).map((image) => new Promise<void>((done) => {
+                                const finish = () => done();
+                                image.addEventListener('load', finish, { once: true });
+                                image.addEventListener('error', finish, { once: true });
+                                setTimeout(finish, 5000);
+                            })));
                             // 导出格式/倍率：优先用生成面板里选的，否则用面板保存的默认值
                             const currentStore = useCardStore.getState();
                             const dataUrl = await generateImage({

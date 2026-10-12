@@ -3,6 +3,15 @@ import type {XConfig} from "@src/hooks/useCardStore";
 import JSZip from 'jszip';
 import {saveAs} from 'file-saver';
 
+const articleBlocksToMarkdown = (tweet: XConfig) => tweet.articleBlocks?.map((block) => {
+    if (block.type === 'image') return `![${block.alt || 'Article image'}](${block.src})`;
+    if (block.type === 'heading') return `## ${block.text}`;
+    if (block.type === 'quote') return block.text.split('\n').map((line) => `> ${line}`).join('\n');
+    if (block.type === 'list') return block.items.map((item, index) => `${block.ordered ? `${index + 1}.` : '-'} ${item}`).join('\n');
+    if (block.type === 'divider') return '---';
+    return block.text;
+}).join('\n\n');
+
 
 export const tweet2Markdown = (tweetData: XConfig[]) => {
     const mdArray = tweetData.map((tweet) => {
@@ -23,14 +32,14 @@ export const tweet2Markdown = (tweetData: XConfig[]) => {
 
         let markdownContent = `# Tweet by ${username}\n\n`;
         markdownContent += `*Posted on ${formattedDate}*\n\n`;
-        markdownContent += `${text}\n\n`;
+        markdownContent += `${articleBlocksToMarkdown(tweet) || text}\n\n`;
 
         if (video && video.poster) {
             markdownContent += `![Video Thumbnail](${video.poster})\n\n`;
             markdownContent += `*This tweet contains a video*\n\n`;
         }
 
-        if (images && images.length > 0) {
+        if (!tweet.articleBlocks?.length && images && images.length > 0) {
             images.forEach((img, index) => {
                 markdownContent += `![Image ${index + 1}](${img})\n\n`;
             });
@@ -85,19 +94,23 @@ export const exportAsAsset = async (tweetData: XConfig | XConfig[]) => {
 
     try {
         for (let tweetIndex = 0; tweetIndex < tweets.length; tweetIndex++) {
-            const { username, images = [], video, text } = tweets[tweetIndex];
+            const { username, images = [], video, text, articleBlocks = [] } = tweets[tweetIndex];
             const folder = zip.folder(`${String(tweetIndex + 1).padStart(2, '0')}-${safeFileName(username || 'tweet')}`)!;
             folder.file("tweet.json", JSON.stringify(tweets[tweetIndex], null, 2));
             folder.file("tweet.md", tweet2Markdown([tweets[tweetIndex]]));
             folder.file("tweet_text.txt", text || '');
 
-            for (let imageIndex = 0; imageIndex < images.length; imageIndex++) {
-                const highQualityUrl = getHighQualityImageUrl(images[imageIndex]);
+            const assetImages = [...new Set([
+                ...images,
+                ...articleBlocks.flatMap((block) => block.type === 'image' ? [block.src] : []),
+            ])];
+            for (let imageIndex = 0; imageIndex < assetImages.length; imageIndex++) {
+                const highQualityUrl = getHighQualityImageUrl(assetImages[imageIndex]);
                 let response: Response;
                 try {
                     response = await fetchAsset(highQualityUrl);
                 } catch {
-                    response = await fetchAsset(images[imageIndex]);
+                    response = await fetchAsset(assetImages[imageIndex]);
                 }
                 const blob = await response.blob();
                 const extension = blob.type.includes('png') ? 'png' : blob.type.includes('webp') ? 'webp' : 'jpg';

@@ -92,6 +92,7 @@ export interface XConfig {
     // 文章推文(X Articles)的标题,普通推文为空
     title?: string,
     articleMode?: 'preview' | 'full',
+    articleBlocks?: ArticleBlock[],
     text: string,
     links?: {
         href: string,
@@ -109,6 +110,12 @@ export interface XConfig {
     shares: number,
     time: number,
 }
+
+export type ArticleBlock =
+    | { type: 'heading' | 'paragraph' | 'quote'; text: string }
+    | { type: 'list'; items: string[]; ordered: boolean }
+    | { type: 'image'; src: string; alt?: string }
+    | { type: 'divider' };
 
 export interface CardStore {
     loadedImages: {
