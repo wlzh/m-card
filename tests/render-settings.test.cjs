@@ -11,6 +11,10 @@ const imageModule = {};
 vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/app/(app)/components/ImageLayout.tsx', 'utf8'), {
   compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.React },
 }).outputText, { exports: imageModule, require: () => ({ ...React, default: React }) });
+const resultIconModule = {};
+vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/app/(app)/components/ResultIcon.tsx', 'utf8'), {
+  compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.React },
+}).outputText, { exports: resultIconModule, require: () => ({ ...React, default: React }) });
 const imports = {
   react: { ...React, default: React },
   '@/lib/utils': { cn: (...a) => a.join(' ') },
@@ -58,4 +62,22 @@ test('all layouts retain all eight article images', () => {
     const html = renderToStaticMarkup(React.createElement(imageModule.default, { layout, images: Array.from({ length: 8 }, (_, i) => `/image-${i}.png`) }));
     assert.equal(new JSDOM(html).window.document.querySelectorAll('img').length, 8);
   }
+});
+test('radial preset preview always emits a finite gradient stop', () => {
+  const baseSettings = {
+    backgroundFillType: 'Radial',
+    backgroundStartColor: '#fff',
+    backgroundEndColor: '#000',
+    backgroundPosition: '50%,50%',
+    backgroundRadius: 0,
+  };
+  const renderIcon = backgroundSpread => new JSDOM(renderToStaticMarkup(React.createElement(resultIconModule.default, {
+    size: 20,
+    isPreview: true,
+    settings: { ...baseSettings, backgroundSpread },
+  }))).window.document;
+
+  assert.equal(renderIcon(undefined).querySelectorAll('stop')[1].getAttribute('offset'), '1');
+  assert.equal(renderIcon(250).querySelectorAll('stop')[1].getAttribute('offset'), '1');
+  assert.equal(renderIcon(-10).querySelectorAll('stop')[1].getAttribute('offset'), '0');
 });

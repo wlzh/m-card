@@ -16,7 +16,7 @@
 ```bash
 pnpm install --frozen-lockfile
 NEXT_PUBLIC_SITE_URL=https://mcard.wlz.si pnpm build:next
-PLASMO_PUBLIC_RENDERER_URL=https://mcard.wlz.si/independent pnpm build
+pnpm build:extension:prod
 pnpm package
 ```
 

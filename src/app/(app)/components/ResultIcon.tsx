@@ -12,6 +12,12 @@ type PropTypes = {
     IconComponent?: React.FC<React.SVGProps<SVGSVGElement>>;
 };
 
+export const normalizeGradientSpread = (spread: unknown): number => {
+    const numericSpread = typeof spread === "number" ? spread : Number(spread);
+    if (!Number.isFinite(numericSpread)) return 1;
+    return Math.min(100, Math.max(0, numericSpread)) / 100;
+};
+
 const ResultIcon = React.forwardRef<SVGSVGElement, PropTypes>(
     ({ settings, size = 512, isPreview, IconComponent }, svgRef) => {
         const strokeSize = isPreview ? 0 : settings.backgroundStrokeSize;
@@ -22,6 +28,7 @@ const ResultIcon = React.forwardRef<SVGSVGElement, PropTypes>(
         const radialGlareGradientId = useId().replace(/:/g, "");
         const gradientX = settings.backgroundPosition?.split(",")[0];
         const gradientY = settings.backgroundPosition?.split(",")[1];
+        const gradientSpread = normalizeGradientSpread(settings.backgroundSpread);
 
         return (
             <svg
@@ -86,7 +93,7 @@ const ResultIcon = React.forwardRef<SVGSVGElement, PropTypes>(
                             gradientUnits="objectBoundingBox"
                         >
                             <stop stopColor={settings.backgroundStartColor} />
-                            <stop offset={settings.backgroundSpread / 100} stopColor={settings.backgroundEndColor} />
+                            <stop offset={gradientSpread} stopColor={settings.backgroundEndColor} />
                         </radialGradient>
                     ) : (
                         <linearGradient

@@ -17,9 +17,11 @@
     "dev:plasmo": "plasmo dev",
     "dev:next": "next dev --port 1947",
     "build": "plasmo build",
+    "build:extension:prod": "PLASMO_PUBLIC_RENDERER_URL=https://mcard.wlz.si/independent plasmo build && node scripts/verify-extension-renderer.mjs",
     "start:next": "next start",
     "build:next": "next build",
     "package": "plasmo package",
+    "package:extension:prod": "PLASMO_PUBLIC_RENDERER_URL=https://mcard.wlz.si/independent plasmo package && node scripts/verify-extension-renderer.mjs",
     "typecheck": "tsc --noEmit",
     "deploy:pages": "wrangler pages deploy out",
     "deploy:pages:local": "sh -c 'set -a && . ./.env.local && set +a && wrangler pages deploy out'"
