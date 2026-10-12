@@ -148,12 +148,13 @@ export const CardController = () => {
                 <label className="flex min-h-[40px] flex-col gap-y-2 justify-start transition-opacity duration-[0.15s] ease-[ease-in-out] py-1">
                     <span className="text-[13px]">Image Layout</span>
                     <div className="w-full">
-                        <RadioGroup value={cardStyles.imageLayout} onValueChange={(v) => {
+                        <RadioGroup value={cardStyles.imageLayout || 'auto'} onValueChange={(v) => {
                             updateCardStyles({
-                                imageLayout: v,
+                                imageLayout: v === 'auto' ? undefined : v,
                             })
                         }}>
                             {[
+                                'auto',
                                 'vertical',
                                 'grid2',
                                 'grid4',

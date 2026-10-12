@@ -42,7 +42,8 @@ const TweetControl: React.FC<TweetControlProps> = ({ onChange }) => {
         className='mb-2'
       />
 
-      <div className="grid grid-cols-4 gap-1">
+      <div className="grid grid-cols-5 gap-1">
+        <ControlOption label='time' active={state.showTime} onClick={() => toggleOption('showTime')} />
         <ControlOption
           label='user'
           active={state.showUser}

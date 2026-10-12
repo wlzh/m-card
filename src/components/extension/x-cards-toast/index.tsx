@@ -155,7 +155,7 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
             cardConfig: {
                 ...cardConfig,
             },
-        }, 20000);
+        }, 60000);
         const imageSrc = data.dataUrl;
         const [, mimeType] = imageSrc.match(/^data:(.+);base64,(.+)$/);
         const blob = await fetch(imageSrc).then(res => res.blob());
@@ -199,7 +199,7 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
             cardConfig: {
                 ...cardConfig,
             },
-        }, 20000);
+        }, 60000);
         const imageSrc = data.dataUrl;
         const link = document.createElement('a');
         link.download = `${xName}.${activeFormat || 'png'}`
@@ -219,14 +219,13 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
                 tweetInfo: finalTweetInfo,
                 cardConfig: {
                     ...cardConfig,
-                    scale: 2,
                 },
-            }, 8000);
+            }, 60000);
             srcRef.current = value.dataUrl;
             setImageSrc(value.dataUrl);
             return value.dataUrl;
         } catch (error) {
-
+            toast.error(error instanceof Error ? error.message : 'Card generation failed');
         } finally {
             setIsLoading(false);
         }
@@ -467,7 +466,8 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
     }, [tweetInfo]);
 
     useEffect(() => {
-        handlePreview(tweetInfo, tweets);
+        const timer = setTimeout(() => handlePreview(tweetInfo, tweets), 250);
+        return () => clearTimeout(timer);
     }, [activeTab, tweets, tweetStyle,
         cardConfig.padding,
         cardConfig.width,
@@ -475,6 +475,8 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
         cardConfig.controls,
         cardConfig.fontSize,
         cardConfig.fontFamily,
+        cardConfig.scale,
+        cardConfig.format,
 
     ])
 

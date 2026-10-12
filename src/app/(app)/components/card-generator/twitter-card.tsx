@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { cn } from '@/lib/utils'; // Assuming you have a utility for class names
 import ImageLayout from '../ImageLayout';
 import XLogo from '@assets/x-logo.svg';
+import Noise from '@assets/noise1.png';
 import * as _ from "lodash-es"
 import { formatTimestamp } from '@src/app/utils/format';
 import type { CardStore, XConfig } from '@src/hooks/useCardStore';
@@ -22,7 +23,7 @@ export const TwitterCard: React.FC<TwitterCardProps> = ({ xConfig, backgroundSty
                         <div className="flex flex-col h-full" key={`xConfig-${index}`}>
                             <CardHeader xConfig={config} controls={controls} />
                             <CardBody xConfig={config} cardStyles={cardStyles} />
-                            {controls.showFooter && (<CardFooter xConfig={config} />)}
+                            {controls.showFooter && (<CardFooter xConfig={config} controls={controls} />)}
                         </div>
                     ))
                 }
@@ -86,7 +87,7 @@ export const TwitterCard: React.FC<TwitterCardProps> = ({ xConfig, backgroundSty
                                     borderWidth: `${cardStyles.borderWidth || 0}px`,
                                     borderStyle: cardStyles.borderWidth ? 'solid' : 'none',
                                     borderColor: cardStyles.borderColor || 'transparent',
-                                    borderRadius: `${backgroundStyles.borderRadius}px`,
+                                    borderRadius: `${cardStyles.borderRadius}px`,
                                 }}
                             >
                                 {card}
@@ -105,26 +106,21 @@ const BackgroundLayers = ({ backgroundStyles, cardStyles }) => (
         <div
             className="absolute inset-0"
             style={{
-                ..._.omit(backgroundStyles, 'borderRadius'),
-                backgroundRepeat: "no-repeat",
+                backgroundColor: backgroundStyles.backgroundColor,
+                backgroundImage: backgroundStyles.backgroundImage?.startsWith('data:')
+                    ? `url(${backgroundStyles.backgroundImage})` : backgroundStyles.backgroundImage,
+                backgroundRepeat: backgroundStyles.backgroundRepeat,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                opacity: Number(backgroundStyles.backgroundOpacity),
+                filter: `blur(${Number(backgroundStyles.backgroundBlur)}px)`,
             }}
         />
-        {backgroundStyles?.backgroundImage && (
-            <div
-                className="absolute inset-0"
-                style={{
-                    backgroundRepeat: backgroundStyles.backgroundRepeat,
-                    backgroundImage: `url(${backgroundStyles.backgroundImage})`,
-                    filter: `blur(${backgroundStyles.backgroundBlur}px)`,
-                    opacity: backgroundStyles.backgroundOpacity,
-                }}
-            />
-        )}
         {cardStyles.hasNoiseTexture && (
             <div
                 className="absolute inset-0 mix-blend-overlay"
                 style={{
-                    backgroundImage: `url(/noise1.png)`, // Assuming noise1 is now a public asset
+                    backgroundImage: `url(${Noise.src})`,
                     backgroundRepeat: "repeat",
                     opacity: cardStyles.noiseTextureOpacity,
                     backgroundPosition: cardStyles.texturePosition,
@@ -203,13 +199,13 @@ const CardBody: React.FC<{
     const layout = (cardStyles.imageLayout as 'vertical' | 'grid2' | 'grid4')
         || (xConfig.images.length >= 2 ? 'grid4' : 'vertical');
 
-    const images = _.compact(
+    const images = _.uniq(_.compact(
         [
             ...xConfig.images,
             xConfig?.video?.poster,
             ...(xConfig?.links?.map((link) => link.src) || []),
         ]
-    )
+    ))
 
     return (
         <div className="flex-grow flex flex-col justify-center">
@@ -219,7 +215,7 @@ const CardBody: React.FC<{
                     className="select-none pointer-events-none"
                     style={{
                         fontWeight: 700,
-                        fontSize: '1.3em',
+                        fontSize: cardStyles.fontSize * 1.3,
                         lineHeight: 1.35,
                         marginBottom: '0.6em',
                         overflowWrap: 'anywhere',
@@ -234,6 +230,7 @@ const CardBody: React.FC<{
                     {xConfig.text}
                 </div>
             </div>
+            {xConfig.articleMode === 'preview' && <p className="text-xs mb-3">文章摘要 · 打开文章后可生成全文</p>}
             {images && images.length > 0 && (
                 <ImageLayout
                     images={images}
@@ -244,15 +241,15 @@ const CardBody: React.FC<{
     )
 }
 
-const CardFooter = ({ xConfig }) => {
+const CardFooter = ({ xConfig, controls }) => {
     const time = _.isArray(xConfig) ? _.last(xConfig).time : xConfig.time;
     return (
         <div>
-            <div className="text-secondary-foreground flex items-center " style={{ paddingBottom: "0.5em", paddingTop: '0.5rem' }}>
+            {controls.showTime && Number.isFinite(time) && <div className="text-secondary-foreground flex items-center " style={{ paddingBottom: "0.5em", paddingTop: '0.5rem' }}>
                 <span>{formatTimestamp(time)}</span>
 
-            </div>
-            <div className='flex  items-center justify-between'>
+            </div>}
+            {controls.showActions && <div className='flex  items-center justify-between'>
                 <div className="flex">
                     {['replies', 'shares', 'likes'].map((stat) => (
                         <div key={stat} className="whitespace-nowrap text-secondary-foreground" style={{ marginRight: "1em" }}>
@@ -263,7 +260,7 @@ const CardFooter = ({ xConfig }) => {
                         </div>
                     ))}
                 </div>
-            </div>
+            </div>}
         </div>
     );
 }

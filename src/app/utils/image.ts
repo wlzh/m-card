@@ -35,50 +35,20 @@ export const generateImage = async (options: {
     const originalHeight = cardEle.style.height;
     console.log('fontFamily', fontFamily);
 
-    const cssText = `
- @font-face {
-  font-family: 'Font Awesome 6 Free';
-  font-style: normal;
-  font-weight: 400;
-  src: url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/webfonts/fa-regular-400.woff2') format('woff2');
-}
-
-@font-face {
-  font-family: 'Font Awesome 6 Free';
-  font-style: normal;
-  font-weight: 900;
-  src: url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/webfonts/fa-solid-900.woff2') format('woff2');
-}
-  @font-face {
-  font-family: 'Roboto';
-  font-style: normal;
-  font-weight: 300;
-  src: url('https://fonts.gstatic.com/s/roboto/v30/KFOlCnqEu92Fr1MmSU5vAw.ttf') format('truetype');
-}
-
-@font-face {
-  font-family: 'Roboto';
-  font-style: normal;
-  font-weight: 400;
-  src: url('https://fonts.gstatic.com/s/roboto/v30/KFOmCnqEu92Fr1Me5Q.ttf') format('truetype');
-}
-
-@font-face {
-  font-family: 'Roboto';
-  font-style: normal;
-  font-weight: 700;
-  src: url('https://fonts.gstatic.com/s/roboto/v30/KFOlCnqEu92Fr1MmWUlvAw.ttf') format('truetype');
-}
-
-@font-face {
-  font-family: 'Roboto Flex';
-  font-style: normal;
-  font-weight: 400;
-  src: url('https://cdn.jsdelivr.net/fontsource/fonts/roboto-flex/vf@latest/latin-wght-normal.woff2') format('woff2-variations');
-  font-variation-settings: 'wght' 400;
-}
-`;
     try {
+        await document.fonts.ready;
+        await Promise.all(Array.from(cardEle.querySelectorAll('img')).map(img => {
+            if (!img.getAttribute('src')) return Promise.resolve();
+            return new Promise<void>((resolve, reject) => {
+                const timer = setTimeout(() => reject(new Error('图片加载超时，请稍后重试')), 15000);
+                img.decode().then(resolve, () => reject(new Error('部分图片加载失败，请稍后重试')))
+                    .finally(() => clearTimeout(timer));
+            });
+        }));
+        const bounds = cardEle.getBoundingClientRect();
+        if (format !== 'svg' && (bounds.height * scale > 32767 || bounds.width * scale > 32767)) {
+            throw new Error('图片过长，请降低导出倍率或改用 SVG');
+        }
         // 如果提供了新的尺寸，则应用它们
         let dataUrl: string;
         const exportOptions: Options = {
@@ -90,7 +60,6 @@ export const generateImage = async (options: {
             },
             font: !fontFamily ? false : {
                 preferredFormat: 'woff2',
-                cssText,
             },
             fetchFn: async (url) => {
                 try {
@@ -119,8 +88,8 @@ export const generateImage = async (options: {
                     return false; // Fall back to normal fetch if there's an error
                 }
             },
-            workerUrl: 'https://unpkg.com/modern-screenshot/dist/worker.js',
-            workerNumber: 2,
+            // Avoid a runtime dependency on an unversioned third-party worker.
+            workerNumber: 0,
         };
 
         switch (format) {
@@ -141,7 +110,7 @@ export const generateImage = async (options: {
         return dataUrl;
     } catch (err) {
         console.error('Error exporting image:', err);
-        return 'error: ' + (err as Error).message;
+        throw err;
     } finally {
     }
 }

@@ -74,7 +74,7 @@ export const BackgroundController = (props) => {
                                         value={[backgroundStyles.backgroundOpacity]}
                                         onValueChange={(value) => {
                                             updateBackgroundStyles({
-                                                backgroundOpacity: value,
+                                                backgroundOpacity: value[0],
                                             })
                                         }}
                                     />
@@ -90,7 +90,7 @@ export const BackgroundController = (props) => {
                                         step={1}
                                         value={[backgroundStyles.backgroundBlur]}
                                         onValueChange={(value) => updateBackgroundStyles({
-                                            backgroundBlur: value,
+                                            backgroundBlur: value[0],
                                         })}
                                     />
                                 </div>

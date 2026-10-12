@@ -1,4 +1,5 @@
 import * as _ from 'lodash-es';
+import { extractPostContent } from './article';
 
 import { domToPng, domToJpeg, domToSvg, type Options, createContext, destroyContext } from 'modern-screenshot'
 import type { XConfig } from '@src/hooks/useCardStore';
@@ -94,9 +95,10 @@ export const copyImage: CopyImage = async (tweetInfo, cardConfig = {}) => {
   const value = await sendMessageToIframe('generate-card-local', {
     tweetInfo: format2Array,
     cardConfig
-  }, 3000);
+  }, 60000);
 
   const imageDataUrl = value.dataUrl;
+  if (!imageDataUrl?.startsWith('data:image/')) throw new Error(value.error || 'Invalid image response');
 
   try {
     // Extract MIME type and base64 data from the data URL
@@ -117,6 +119,7 @@ export const copyImage: CopyImage = async (tweetInfo, cardConfig = {}) => {
   } catch (err) {
     console.error('Failed to copy image:', err);
   }
+  return imageDataUrl;
 }
 
 
@@ -127,7 +130,7 @@ export const downloadImage = async (tweetInfo: XConfig | XConfig[], cardConfig =
   const value = await sendMessageToIframe('generate-card-local', {
     tweetInfo: format2Array,
     cardConfig,
-  }, 20000);
+  }, 60000);
   const { url, dataUrl } = value;
   const xName = 'm-card'
   const link = document.createElement('a');
@@ -174,28 +177,28 @@ export function extractTweetInfo(postElement: Element | null) {
   if (!postElement) return null;
 
   // 提取头像
-  tweet.avatar = postElement.querySelector('img[draggable="true"]')?.src;
+  tweet.avatar = postElement.querySelector<HTMLImageElement>('[data-testid="Tweet-User-Avatar"] img, img[draggable="true"]')?.src;
 
   // 提取用户信息和时间
   const userInfoDiv = postElement.querySelector('[data-testid="User-Name"]');
   if (!userInfoDiv) return;
 
-  const authorUrls = Array.from(userInfoDiv.querySelectorAll('[data-testid="User-Name"] a'))?.map(e => e.href);
+  const authorUrls = Array.from(userInfoDiv.querySelectorAll<HTMLAnchorElement>('a')).map(e => e.href);
   //console.log('authorUrls', authorUrls);
 
   //账号URL
   tweet.authorUrl = authorUrls.length > 0 ? authorUrls[0] : null;
 
   //帖子URL
-  const xPostStatusUrls = Array.from(postElement.querySelectorAll('a[href*="/status/"]')).map(a => a.href);
+  const xPostStatusUrls = Array.from(postElement.querySelectorAll<HTMLAnchorElement>('a[href*="/status/"]')).map(a => a.href).filter(href => /\/status\/\d+(?:\?.*)?$/.test(href));
   //console.log('xPostStatusUrls', xPostStatusUrls);
   tweet.url = xPostStatusUrls.length > 0 ? xPostStatusUrls[0] : null;
 
-  tweet.username = userInfoDiv.querySelector('div[dir="ltr"]').textContent;
+  tweet.username = userInfoDiv.querySelector('div[dir="ltr"]')?.textContent || userInfoDiv.textContent || '';
   let timeStr = userInfoDiv.querySelector('time')?.getAttribute('datetime');
   // console.log('timeStr', timeStr, postElement.querySelector('time'));
   tweet.time = new Date(timeStr).getTime() / 1000;
-  if (/\/status\/\d+$/.test(window.location.href)) {
+  if (/\/status\/\d+(?:\?.*)?$/.test(window.location.href)) {
     timeStr = postElement.querySelector('time')?.getAttribute('datetime');
     console.log('timeStr', timeStr);
     if (timeStr) {
@@ -204,42 +207,7 @@ export function extractTweetInfo(postElement: Element | null) {
   }
 
 
-  // 提取文本内容。
-  // 普通推文:单个 [data-testid="tweetText"]。
-  // 文章推文(X Articles):正文是富文本多块结构,标题在 heading 里 ——
-  // 全部 tweetText 块拼接(普通推文等价于原来取第一块),空则回退 richText 块。
-  const textBlocks = Array.from(postElement.querySelectorAll('[data-testid="tweetText"]'))
-    .map(el => el.textContent?.trim() || '')
-    .filter(Boolean);
-  if (textBlocks.length === 0) {
-    const richBlocks = Array.from(postElement.querySelectorAll('[data-testid="richText"]'))
-      .map(el => el.textContent?.trim() || '')
-      .filter(Boolean);
-    textBlocks.push(...richBlocks);
-  }
-  tweet.text = textBlocks.join('\n\n');
-
-  // 文章标题:优先专用 testid,回退 article 内首个 heading
-  const titleEl = postElement.querySelector(
-    '[data-testid="articleTitle"], [data-testid="article-title"]'
-  ) || postElement.querySelector('h1, h2[dir="auto"]');
-  const titleText = titleEl?.textContent?.trim() || '';
-  if (titleText && titleText !== tweet.text) {
-    tweet.title = titleText;
-  }
-  // 文章推文兜底:og:description 对文章推文就是文章标题(普通推文时与正文相同,
-  // 被「与正文去重」条件自然排除)。详情页一定带该元数据,不依赖文章模块 DOM 结构。
-  if (!tweet.title) {
-    const ogDesc = document.querySelector('meta[property="og:description"]')?.getAttribute('content')?.trim() || '';
-    if (ogDesc && tweet.text && ogDesc !== tweet.text && !tweet.text.includes(ogDesc)) {
-      tweet.title = ogDesc;
-    }
-  }
-  // 文章推文的正文常只是一条 t.co 短链:有标题时清掉,卡片显示 标题+配图 而非无意义链接
-  if (tweet.title && /^https:\/\/t\.co\/\S+$/.test(tweet.text.trim())) {
-    tweet.text = '';
-  }
-
+  Object.assign(tweet, extractPostContent(postElement));
   tweet.tags = [];
   postElement.querySelectorAll('[data-testid="tweetText"] a[href^="/hashtag/"]').forEach(tag => {
     const tagText = tag.textContent;
@@ -257,7 +225,7 @@ export function extractTweetInfo(postElement: Element | null) {
 
   // 提取图片（如果有）
   const images = _.compact([
-    ...postElement.querySelectorAll('[data-testid="tweetPhoto"] img'),
+    ...postElement.querySelectorAll<HTMLImageElement>('[data-testid="tweetPhoto"] img, [data-testid="article-cover-image"] img'),
     // ...postElement.querySelectorAll('[data-testid="tweetPhoto"] video')
   ]);
   tweet.images = Array.from(images).map(img => img.src);
@@ -286,7 +254,7 @@ export function extractTweetInfo(postElement: Element | null) {
   tweet.links = Array.from(links).map(link => ({
     href: link.href,
     text: link.textContent,
-    src: link?.querySelector('img')?.src
+    src: link.querySelector('img')?.src === tweet.avatar ? undefined : link.querySelector('img')?.src.replace(/name=\w+/, 'name=large')
   }));
 
   // 提取统计信息

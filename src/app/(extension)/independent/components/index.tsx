@@ -23,6 +23,7 @@ let pendingGenerationSnapshot: {
 const Index = () => {
 
     useEffect(() => {
+        let queue = Promise.resolve();
         const fn = async (event: MessageEvent) => {
             if (event.origin !== 'https://x.com' || event.source !== window.parent) return;
 
@@ -36,6 +37,7 @@ const Index = () => {
                 const { colorIndex, backgroundStyles, cardStyles } = useCardStore.getState();
                 (event.source as Window)?.postMessage({
                     action: 'get-card-defaults',
+                    requestId: event.data.requestId,
                     value: {
                         colorIndex,
                         width: cardStyles.width,
@@ -85,7 +87,6 @@ const Index = () => {
                     console.warn('rehydrate before generation failed, using in-memory settings', rehydrateError);
                 }
 
-                useCardStore.getState().setXConfig(tweetInfo)
 
                 // 快照面板设置：生成时临时套用扩展传来的参数（padding/fontSize 等），
                 // 生成完成后恢复，避免这些临时值写回 IndexedDB 冲掉用户保存的默认值。
@@ -102,13 +103,14 @@ const Index = () => {
                     }));
                 }
                 setPersistencePaused(true);
+                useCardStore.getState().setXConfig(tweetInfo);
 
                 // 以下参数只在扩展生成面板里实际调整过才会出现（cardConfig 初始为空），
                 // 未调整的字段保持面板（本机默认值）的设置
                 if (cardConfig?.colorIndex != null) {
                     // 与配置面板同语义：选预设即退出渐变/自定义纯色，预设立即生效
                     useCardStore.getState().setColorIndex(cardConfig.colorIndex);
-                    useCardStore.getState().updateBackgroundStyles({ useGradient: false });
+                    useCardStore.getState().updateBackgroundStyles({ useGradient: false, backgroundImage: '' });
                     useCardStore.getState().setTabConfig({ openCustomColor: false });
                 }
 
@@ -118,12 +120,12 @@ const Index = () => {
                     });
                 }
 
-                if (cardConfig?.fontSize != null) {
+                if (cardConfig?.fontSize != null || cardConfig?.fontFamily) {
                     const fontSizePatch: {
-                        fontSize: number,
+                        fontSize?: number,
                         fontFamily?: string,
                     } = {
-                        fontSize: cardConfig.fontSize,
+                        ...(cardConfig.fontSize != null ? { fontSize: cardConfig.fontSize } : {}),
                     };
                     // 只在明确选择了字体时才覆盖，否则保留面板默认字体
                     if (cardConfig.fontFamily) {
@@ -161,7 +163,7 @@ const Index = () => {
 
                 // 双 rAF + 短延时：确保 React 已把刚写入的状态（帖子内容/水印/临时参数）
                 // commit 到 DOM 再截图，避免截到旧画面（水印缺失的一大来源）
-                requestAnimationFrame(() => {
+                await new Promise<void>((resolve) => requestAnimationFrame(() => {
                     requestAnimationFrame(async () => {
                         await new Promise((r) => setTimeout(r, 120));
                         try {
@@ -170,15 +172,17 @@ const Index = () => {
                             const dataUrl = await generateImage({
                                 format: cardConfig?.format || currentStore.cardStyles.exportFormat || 'png',
                                 scale: cardConfig?.scale || currentStore.cardStyles.exportScale || 2,
-                                fontFamily: cardConfig.fontFamily || false,
+                                fontFamily: currentStore.cardStyles.fontFamily || false,
                             });
                             (event.source as Window)?.postMessage({
                                 action: actionName,
+                                requestId: event.data.requestId,
                                 value: { dataUrl }
                             }, event.origin);
                         } catch (error) {
                             (event.source as Window)?.postMessage({
                                 action: actionName,
+                                requestId: event.data.requestId,
                                 value: { error: error instanceof Error ? error.message : 'Card generation failed' }
                             }, event.origin);
                         } finally {
@@ -189,17 +193,20 @@ const Index = () => {
                             }
                             setPersistencePaused(false);
                             // 解除暂停后强制落盘一次快照值，兜底保证存储 == 内存（防抖期间可能有一次被暂停丢弃）
-                            await persistSettingsNow();
+                            try { await useCardStore.persist.rehydrate(); } finally { resolve(); }
                         }
                     });
-                });
+                }));
             }
         }
         if (typeof window !== 'undefined') {
-            window.addEventListener('message', fn);
+            const onMessage = (event: MessageEvent) => {
+                queue = queue.then(() => fn(event)).catch(console.error);
+            };
+            window.addEventListener('message', onMessage);
 
             return () => {
-                window.removeEventListener('message', fn);
+                window.removeEventListener('message', onMessage);
             }
         }
     }, [])

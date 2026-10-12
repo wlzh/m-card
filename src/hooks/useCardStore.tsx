@@ -91,6 +91,7 @@ export interface XConfig {
     username: string,
     // 文章推文(X Articles)的标题,普通推文为空
     title?: string,
+    articleMode?: 'preview' | 'full',
     text: string,
     links?: {
         href: string,

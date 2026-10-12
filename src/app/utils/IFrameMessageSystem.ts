@@ -6,6 +6,7 @@ interface MessageEvent {
   data: {
     action: string;
     value: any;
+    requestId?: string;
   };
 }
 
@@ -36,12 +37,13 @@ class IFrameMessageSystem {
 
   publish(iframe: HTMLIFrameElement, action: string, data: any, timeout: number = 10000): Promise<any> {
     return new Promise((resolve, reject) => {
+      const requestId = crypto.randomUUID();
       const timeoutId = setTimeout(() => {
         unsubscribe();
         reject(new Error('Iframe message timeout'));
       }, timeout);
 
-      const responseAction = action; // 使用相同的 action 名称
+      const responseAction = `${action}:${requestId}`;
       const responseHandler = (response: any) => {
         clearTimeout(timeoutId);
         unsubscribe();
@@ -61,6 +63,7 @@ class IFrameMessageSystem {
       }
       iframe.contentWindow?.postMessage({
         action,
+        requestId,
         body: data
       }, targetOrigin);
     });
@@ -70,7 +73,8 @@ class IFrameMessageSystem {
     if (!event.source || !this.trustedSources.has(event.source) || !this.trustedOrigins.has(event.origin)) {
       return;
     }
-    const { action, value } = event.data;
+    const { action, value, requestId } = event.data;
+    if (requestId) this.subscribers.get(`${action}:${requestId}`)?.forEach(callback => callback(value));
     if (this.subscribers.has(action)) {
       this.subscribers.get(action)!.forEach(callback => callback(value));
     }

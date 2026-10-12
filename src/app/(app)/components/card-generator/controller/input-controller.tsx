@@ -18,6 +18,10 @@ export const InputController = () => {
             <AccordionItem value={'Input'}>
                 <AccordionTrigger>Input</AccordionTrigger>
                 <AccordionContent className="">
+                    <label className="flex flex-col gap-y-2 py-1">
+                        <span className="text-[13px]">title</span>
+                        <Input value={first.title ?? ''} onChange={(e) => updateFirst({ title: e.target.value })} />
+                    </label>
                     <label className="flex min-h-[40px] flex-col gap-y-2  justify-start transition-opacity duration-[0.15s] ease-[ease-in-out]  py-1">
                         <span className=" text-[13px]">username</span>
                         <div className=" px-1.5">

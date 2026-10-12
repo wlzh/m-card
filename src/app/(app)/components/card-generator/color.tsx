@@ -194,7 +194,7 @@ export const ColorSelect = () => {
                             onChange={() => {
                                 // 最近操作优先：选预设即退出渐变/自定义纯色模式，预设立即生效
                                 setColorIndex(index);
-                                updateBackgroundStyles({ useGradient: false });
+                                updateBackgroundStyles({ useGradient: false, backgroundImage: '' });
                                 setTabConfig({ openCustomColor: false });
                             }}
                         />

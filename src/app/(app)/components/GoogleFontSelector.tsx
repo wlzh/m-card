@@ -33,7 +33,7 @@ const googleFonts = [
     { name: 'Ma Shan Zheng', value: 'Ma Shan Zheng' },
 ];
 
-export default function GoogleFontSelector({ onFontChange }) {
+export default function GoogleFontSelector({ onFontChange }: { onFontChange?: (value: string) => void }) {
     // const [selectedFont, setSelectedFont] = useState('sans-serif');
     const setFontStyles = useCardStore((state) => state.updateCardStyles);
     const fontFamily = useCardStore((state) => state.cardStyles.fontFamily);

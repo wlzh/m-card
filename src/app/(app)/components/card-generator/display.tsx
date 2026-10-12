@@ -1,5 +1,5 @@
 import { CommonLayouts, useCardStore } from "@src/hooks/useCardStore"
-import { useMemo } from "react"
+import { useMemo, useEffect } from "react"
 
 
 import { presets } from "./color"
@@ -12,9 +12,17 @@ export const Display = () => {
     const tabConfig = useCardStore((state) => state.tabConfig);
     const backgroundStyles = useCardStore((state) => state.backgroundStyles)
     const xConfig = useCardStore((state) => state.xConfig)
+    useEffect(() => {
+        if (!cardStyles.fontFamily || cardStyles.fontFamily === 'sans-serif') return;
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(cardStyles.fontFamily)}:wght@400;700&display=swap`;
+        document.head.appendChild(link);
+        return () => link.remove();
+    }, [cardStyles.fontFamily]);
 
     const finalBackgroundStyles = useMemo(() => {
-        const color = presets[colorIndex]
+        const color = presets[colorIndex] || presets[0]
 
         let borderRadius = cardStyles.borderRadius;
         if (backgroundStyles.padding === 0) {
@@ -29,7 +37,7 @@ export const Display = () => {
             }
         }
 
-        if (tabConfig.openCustomColor) {
+        if (tabConfig.openCustomColor || backgroundStyles.backgroundImage) {
             return {
                 ...backgroundStyles,
                 borderRadius,
@@ -59,7 +67,7 @@ export const Display = () => {
                 borderRadius,
             }
         }
-    }, [colorIndex, backgroundStyles, tabConfig.openCustomColor])
+    }, [colorIndex, backgroundStyles, cardStyles.borderRadius, tabConfig.openCustomColor])
 
     const calculateScale = (width, height) => {
         const maxWidth = 1920 / 2; // Maximum width of the card in the display
@@ -88,6 +96,3 @@ export const Display = () => {
         </div>
     )
 }
-
-
-
