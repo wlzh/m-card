@@ -89,6 +89,8 @@ export interface XConfig {
     url: string;
     avatar: string,
     username: string,
+    // 文章推文(X Articles)的标题,普通推文为空
+    title?: string,
     text: string,
     links?: {
         href: string,

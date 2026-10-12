@@ -213,6 +213,22 @@ const CardBody: React.FC<{
 
     return (
         <div className="flex-grow flex flex-col justify-center">
+            {/* 文章标题(X Articles):粗体大号,普通推文无此行 */}
+            {xConfig.title ? (
+                <div
+                    className="select-none pointer-events-none"
+                    style={{
+                        fontWeight: 700,
+                        fontSize: '1.3em',
+                        lineHeight: 1.35,
+                        marginBottom: '0.6em',
+                        overflowWrap: 'anywhere',
+                    }}
+                    dir="auto"
+                >
+                    {xConfig.title}
+                </div>
+            ) : null}
             <div className={cn("tweet-content text-lg leading-normal pointer-events-none mb-[1em]    ")} style={{ fontSize: cardStyles.fontSize, overflowWrap: 'anywhere' }}>
                 <div className="content whitespace-pre-wrap" dir="auto">
                     {xConfig.text}

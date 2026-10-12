@@ -204,17 +204,55 @@ export function extractTweetInfo(postElement: Element | null) {
   }
 
 
-  // 提取文本内容
-  // tweet.text = postElement.querySelector('[data-testid="tweetText"]').textContent;
-  const tweetTextElement = postElement.querySelector('[data-testid="tweetText"]');
-  tweet.text = tweetTextElement?.textContent || '';
+  // 提取文本内容。
+  // 普通推文:单个 [data-testid="tweetText"]。
+  // 文章推文(X Articles):正文是富文本多块结构,标题在 heading 里 ——
+  // 全部 tweetText 块拼接(普通推文等价于原来取第一块),空则回退 richText 块。
+  const textBlocks = Array.from(postElement.querySelectorAll('[data-testid="tweetText"]'))
+    .map(el => el.textContent?.trim() || '')
+    .filter(Boolean);
+  if (textBlocks.length === 0) {
+    const richBlocks = Array.from(postElement.querySelectorAll('[data-testid="richText"]'))
+      .map(el => el.textContent?.trim() || '')
+      .filter(Boolean);
+    textBlocks.push(...richBlocks);
+  }
+  tweet.text = textBlocks.join('\n\n');
+
+  // 文章标题:优先专用 testid,回退 article 内首个 heading
+  const titleEl = postElement.querySelector(
+    '[data-testid="articleTitle"], [data-testid="article-title"]'
+  ) || postElement.querySelector('h1, h2[dir="auto"]');
+  const titleText = titleEl?.textContent?.trim() || '';
+  if (titleText && titleText !== tweet.text) {
+    tweet.title = titleText;
+  }
+  // 文章推文兜底:og:description 对文章推文就是文章标题(普通推文时与正文相同,
+  // 被「与正文去重」条件自然排除)。详情页一定带该元数据,不依赖文章模块 DOM 结构。
+  if (!tweet.title) {
+    const ogDesc = document.querySelector('meta[property="og:description"]')?.getAttribute('content')?.trim() || '';
+    if (ogDesc && tweet.text && ogDesc !== tweet.text && !tweet.text.includes(ogDesc)) {
+      tweet.title = ogDesc;
+    }
+  }
+  // 文章推文的正文常只是一条 t.co 短链:有标题时清掉,卡片显示 标题+配图 而非无意义链接
+  if (tweet.title && /^https:\/\/t\.co\/\S+$/.test(tweet.text.trim())) {
+    tweet.text = '';
+  }
+
   tweet.tags = [];
-  tweetTextElement?.querySelectorAll('a[href^="/hashtag/"]').forEach(tag => {
+  postElement.querySelectorAll('[data-testid="tweetText"] a[href^="/hashtag/"]').forEach(tag => {
     const tagText = tag.textContent;
     tweet.tags.push(tagText);
     tweet.text = tweet.text.replace(tagText, ''); // 从文本中移除标签
   });
   tweet.text = tweet.text.trim(); // 移除可能的多余空格
+
+  console.log('[m-card] extract:', {
+    title: tweet.title ? `${tweet.title.slice(0, 40)}…(${tweet.title.length})` : '(none)',
+    textLength: tweet.text.length,
+    images: tweet.images?.length ?? 0,
+  });
 
 
   // 提取图片（如果有）
