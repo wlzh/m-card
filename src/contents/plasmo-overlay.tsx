@@ -6,6 +6,7 @@ import { Toaster } from 'react-hot-toast';
 import { iframeMessageSystem } from '@src/app/utils/IFrameMessageSystem';
 import { useTweetsStore } from '@src/components/extension/use-tweet-collection';
 import { createRoot } from 'react-dom/client';
+import { CLOUD_RENDERER_URL, getLocalRendererUrl } from '@src/config/renderer';
 export const config: PlasmoCSConfig = {
     matches: ["https://x.com/*"],
 }
@@ -23,7 +24,8 @@ export const getShadowHostId = () => "x-cards-overlay"
 
 const AnchorOverlay: React.FC<PlasmoCSUIProps> = ({ anchor }) => {
     const iframeRef = useRef<HTMLIFrameElement>(null)
-    const websiteURL = process.env.PLASMO_PUBLIC_RENDERER_URL || "http://localhost:1947/independent";
+    const migrationHostRef = useRef<HTMLDivElement>(null)
+    const localRendererURL = getLocalRendererUrl();
 
 
     useEffect(() => {
@@ -33,6 +35,51 @@ const AnchorOverlay: React.FC<PlasmoCSUIProps> = ({ anchor }) => {
         return () => unsubscribe();
     }, []);
 
+    useEffect(() => {
+        let cancelled = false;
+        const migrationKey = 'mcard-cloud-settings-migrated-v1';
+
+        const waitForRenderer = async (iframe: HTMLIFrameElement, attempts = 5) => {
+            let lastError: unknown;
+            for (let attempt = 0; attempt < attempts; attempt += 1) {
+                try {
+                    return await iframeMessageSystem.publish(iframe, 'renderer-ping', {}, 1200);
+                } catch (error) {
+                    lastError = error;
+                }
+            }
+            throw lastError;
+        };
+
+        const migrateCloudSettings = async () => {
+            const migrated = await chrome.storage.local.get(migrationKey);
+            if (migrated[migrationKey] || cancelled || !iframeRef.current || !migrationHostRef.current) return;
+
+            const cloudFrame = document.createElement('iframe');
+            cloudFrame.src = CLOUD_RENDERER_URL;
+            cloudFrame.title = 'M.Card cloud settings migration';
+            cloudFrame.style.cssText = 'width:0;height:0;border:0;opacity:0;position:absolute;';
+            migrationHostRef.current.appendChild(cloudFrame);
+
+            try {
+                await waitForRenderer(cloudFrame);
+                const settings = await iframeMessageSystem.publish(cloudFrame, 'export-card-settings', {}, 5000);
+                await waitForRenderer(iframeRef.current);
+                await iframeMessageSystem.publish(iframeRef.current, 'import-card-settings', settings, 5000);
+                await chrome.storage.local.set({ [migrationKey]: true });
+            } catch (error) {
+                console.warn('[m-card] Cloud settings migration deferred:', error);
+            } finally {
+                cloudFrame.remove();
+            }
+        };
+
+        void migrateCloudSettings();
+        return () => {
+            cancelled = true;
+        };
+    }, [localRendererURL]);
+
 
     return (
         <div>
@@ -40,7 +87,9 @@ const AnchorOverlay: React.FC<PlasmoCSUIProps> = ({ anchor }) => {
             <iframe
                 ref={iframeRef}
                 id="x-card-ai"
-                src={websiteURL}
+                src={localRendererURL}
+                data-renderer-mode="local"
+                data-fallback-src={CLOUD_RENDERER_URL}
                 style={{
                     width: '100vw',
                     height: '0px',
@@ -48,6 +97,7 @@ const AnchorOverlay: React.FC<PlasmoCSUIProps> = ({ anchor }) => {
                     opacity: 0,
                 }}
             />
+            <div ref={migrationHostRef} />
         </div >
     )
 }

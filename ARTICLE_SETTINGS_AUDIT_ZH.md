@@ -1,4 +1,4 @@
-# M.Card 0.3.8 文章与设置核对
+# M.Card 0.4.0 文章与设置核对
 
 核对日期：2026-10-13。示例：https://x.com/wlzh/status/2109433207318081885
 
@@ -13,7 +13,7 @@
 
 ## 设置映射
 
-完整设置面板自动保存当前设置到本站 IndexedDB `card-settings`。`Save as Default` 另存恢复快照 `card-defaults`；`Load Default` 恢复该快照；`Reset` 恢复出厂设置。帖子内容不保存。
+完整设置面板自动保存当前设置到扩展 origin 的 IndexedDB `card-settings`。`Save as Default` 另存恢复快照 `card-defaults`；`Load Default` 恢复该快照；`Reset` 恢复出厂设置。帖子内容不保存。
 
 | 设置 | 出厂值 | 生图侧对应/效果 |
 | --- | --- | --- |
@@ -36,14 +36,14 @@
 | Background Opacity / Blur | 1 / 0px | 正确保存数值并应用 CSS |
 | Gradient | 关，0deg，白到白 | 自定义渐变开关、角度和两端颜色 |
 | Background Image | 空 | 本地图片数据保存，选预设时清除 |
-| Noise / Opacity | 关 / 0.05 | 已打包噪点资源，不再引用缺失的 /noise1.png |
+| Noise / Opacity | 关 / 0.05 | 渲染链路已内联噪点资源，但当前控制器未开放该选项，属于保留参数 |
 
 快捷生图面板的修改是当前会话覆盖值，不覆盖上述持久默认值；切换帖子或重新打开生图面板会清除临时值和旧预览，再回到本机默认值。并发请求按请求 ID 对应并串行渲染，结束后恢复默认值，不将临时配置写回存储。
 
-同机不同浏览器、不同站点域名不是同一份存储；Chrome 对第三方 iframe 的存储分区也可能导致官网顶层页和 X 内 iframe 分开。优先从 X 生图窗口内打开设置。不能保证跨浏览器同步。
+同机不同浏览器、不同 Chrome 配置文件不是同一份存储。v0.4.0 的默认值保存在扩展 origin，不会由多个用户共享到 Cloudflare；旧云端 origin 设置会尝试一次性迁移。故障回退时当前本地设置会传给云端页面用于当次渲染，但不会形成服务端数据库或跨浏览器同步。
 
 ## 验证与剩余验收
 
 - `pnpm test` 覆盖文章选择器、图文顺序、摘要/引用隔离、预览空态、页脚布局、渲染参数、八张配图和持久化恢复。DOM 与 IndexedDB 测试替身不冒充安装环境验收。
 - Next.js 与 Chrome 扩展生产构建是发布门禁；`pnpm typecheck` 仍会如实列出上游未挂载组件的旧类型债务。
-- Cloudflare 发布后必须分别检查 Pages 默认域名、`https://mcard.wlz.si/independent` 和重新加载后的 Chrome 扩展，不能以本地构建代替线上验收。
+- Cloudflare 发布后必须分别检查 Pages 默认域名与 `https://mcard.wlz.si/independent`；重新加载后的 Chrome 扩展还需单独检查本地渲染和断网/故障回退，不能以构建通过代替安装环境验收。

@@ -1,8 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { cn } from '@/lib/utils'; // Assuming you have a utility for class names
 import ImageLayout from '../ImageLayout';
-import XLogo from '@assets/x-logo.svg';
-import Noise from '@assets/noise1.png';
 import * as _ from "lodash-es"
 import { formatTimestamp } from '@src/app/utils/format';
 import type { CardStore, XConfig } from '@src/hooks/useCardStore';
@@ -12,6 +10,8 @@ interface TwitterCardProps {
     backgroundStyles: CardStore['backgroundStyles'],
     cardStyles: CardStore['cardStyles'],
 }
+
+const NOISE_TEXTURE = `url("data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="140" height="140"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23n)" opacity="0.45"/></svg>')}")`;
 
 export const TwitterCard: React.FC<TwitterCardProps> = ({ xConfig, backgroundStyles, cardStyles }) => {
     const card = useMemo(() => {
@@ -120,7 +120,7 @@ const BackgroundLayers = ({ backgroundStyles, cardStyles }) => (
             <div
                 className="absolute inset-0 mix-blend-overlay"
                 style={{
-                    backgroundImage: `url(${Noise.src})`,
+                    backgroundImage: NOISE_TEXTURE,
                     backgroundRepeat: "repeat",
                     opacity: cardStyles.noiseTextureOpacity,
                     backgroundPosition: cardStyles.texturePosition,
@@ -168,12 +168,14 @@ const CardHeader: React.FC<{
 
 const CardLogo = ({ xConfig }) => {
     return (<div className='flex justify-center'>
-        <img
+        <svg
             id="x-logo"
-            src={XLogo.src}
-            alt=""
+            viewBox="0 0 24 24"
+            aria-label="X"
             className=" h-[20px] w-[20px] right-4 top-4 opacity-30 dark:invert saturate-0 cursor-alias active:scale-90 transition-all ease-in-out"
-        />
+        >
+            <path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.657l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231 5.45-6.231Zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77Z" />
+        </svg>
     </div>
     )
 }

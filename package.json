@@ -1,7 +1,7 @@
 {
   "name": "m-card",
   "displayName": "M.Card",
-  "version": "0.3.8",
+  "version": "0.4.0",
   "description": "Self-hosted Chrome extension for exporting X posts as cards and portable data.",
   "packageManager": "pnpm@9.15.4",
   "keywords": [
@@ -115,6 +115,22 @@
     "permissions": [
       "storage",
       "tabs"
+    ],
+    "host_permissions": [
+      "https://pbs.twimg.com/*",
+      "https://video.twimg.com/*",
+      "https://fonts.googleapis.com/*",
+      "https://fonts.gstatic.com/*"
+    ],
+    "web_accessible_resources": [
+      {
+        "resources": [
+          "tabs/renderer.html"
+        ],
+        "matches": [
+          "https://x.com/*"
+        ]
+      }
     ],
     "key": "$CRX_PUBLIC_KEY"
   }

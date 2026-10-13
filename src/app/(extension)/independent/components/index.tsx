@@ -27,6 +27,56 @@ const Index = () => {
         const fn = async (event: MessageEvent) => {
             if (event.origin !== 'https://x.com' || event.source !== window.parent) return;
 
+            if (event.data?.action === 'renderer-ping') {
+                (event.source as Window)?.postMessage({
+                    action: 'renderer-ping',
+                    requestId: event.data.requestId,
+                    value: { ready: true, mode: location.protocol === 'chrome-extension:' ? 'local' : 'cloud' },
+                }, event.origin);
+                return;
+            }
+
+            if (event.data?.action === 'export-card-settings') {
+                await useCardStore.persist.rehydrate();
+                const { colorIndex, backgroundStyles, cardStyles, tabConfig } = useCardStore.getState();
+                (event.source as Window)?.postMessage({
+                    action: 'export-card-settings',
+                    requestId: event.data.requestId,
+                    value: { colorIndex, backgroundStyles, cardStyles, tabConfig },
+                }, event.origin);
+                return;
+            }
+
+            if (event.data?.action === 'import-card-settings' && event.data?.body) {
+                const incoming = event.data.body;
+                const current = useCardStore.getState();
+                useCardStore.setState({
+                    colorIndex: typeof incoming.colorIndex === 'number' ? incoming.colorIndex : current.colorIndex,
+                    backgroundStyles: {
+                        ...current.backgroundStyles,
+                        ...incoming.backgroundStyles,
+                        backgroundFilter: {
+                            ...current.backgroundStyles.backgroundFilter,
+                            ...incoming.backgroundStyles?.backgroundFilter,
+                        },
+                    },
+                    cardStyles: {
+                        ...current.cardStyles,
+                        ...incoming.cardStyles,
+                        controls: { ...current.cardStyles.controls, ...incoming.cardStyles?.controls },
+                        watermark: { ...current.cardStyles.watermark, ...incoming.cardStyles?.watermark },
+                    },
+                    tabConfig: { ...current.tabConfig, ...incoming.tabConfig },
+                });
+                await persistSettingsNow();
+                (event.source as Window)?.postMessage({
+                    action: 'import-card-settings',
+                    requestId: event.data.requestId,
+                    value: { imported: true },
+                }, event.origin);
+                return;
+            }
+
             // 生成面板（toast）首次打开时拉取本机默认值，用于按钮高亮等 UI 显示
             if (event.data?.action === 'get-card-defaults') {
                 try {
@@ -208,6 +258,10 @@ const Index = () => {
         }
         if (typeof window !== 'undefined') {
             const onMessage = (event: MessageEvent) => {
+                if (event.data?.action === 'renderer-ping') {
+                    void fn(event);
+                    return;
+                }
                 queue = queue.then(() => fn(event)).catch(console.error);
             };
             window.addEventListener('message', onMessage);

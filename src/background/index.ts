@@ -1,7 +1,7 @@
-import { sendToContentScript } from "@plasmohq/messaging"
+import { CLOUD_RENDERER_URL, getLocalRendererUrl } from "@src/config/renderer";
 
-const rendererUrl = process.env.PLASMO_PUBLIC_RENDERER_URL || "http://localhost:1947/independent";
-const welcomeUrl = new URL("/welcome", rendererUrl).toString();
+const rendererUrl = getLocalRendererUrl();
+const welcomeUrl = new URL("/welcome", CLOUD_RENDERER_URL).toString();
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "checkInstallation") {

@@ -2,12 +2,13 @@
 
 ## 架构
 
-这不是一个只需安装扩展的离线项目：
+v0.4.0 起采用本地优先架构：
 
 - Chrome 扩展负责在 `x.com` 读取帖子 DOM、展示操作界面、复制和下载。
-- Next.js 站点的 `/independent` 页面在隐藏 iframe 中完成卡片渲染。
-- 扩展通过 `PLASMO_PUBLIC_RENDERER_URL` 指向你的渲染站点，不再依赖上游服务。
-- 站点使用 Next.js 纯静态导出，可部署到 Cloudflare Pages，不需要 VPS。
+- 扩展内置 `tabs/renderer.html`，默认在 `chrome-extension://` 本地隐藏 iframe 中生图，不依赖服务器可用性。
+- `PLASMO_PUBLIC_RENDERER_URL` 指向故障回退渲染器；本地页面无法加载或生成失败时，同一次请求自动切换到云端并重试一次。
+- 回退前会尽量导出本地设置并导入云端页面，避免云端使用另一套默认值。
+- Next.js 站点仍提供官网、欢迎页和备选 `/independent`；纯静态导出可部署到 Cloudflare Pages，不需要 VPS。
 
 ## 本地构建
 
@@ -36,7 +37,7 @@ wrangler pages project create m-card --production-branch master
 pnpm deploy:pages --project-name m-card
 ```
 
-首次发布后，将真实 `pages.dev` 地址写入上面两个环境变量，重新构建站点和扩展并再发布。自定义域名可在 Pages 控制台绑定，绑定后同样要重新构建扩展。
+首次发布后，将真实 `pages.dev` 或自定义域名写入 `PLASMO_PUBLIC_RENDERER_URL`，重新构建扩展。自定义域名可在 Pages 控制台绑定；它只影响备选渲染器和欢迎页，不影响本地生图。
 
 ## 部署凭证（仅存本机，不入库）
 
@@ -76,11 +77,14 @@ curl --noproxy '*' -sS -L https://mcard.wlz.si/ | head -n 5
 3. 选择 `build/chrome-mv3-prod/`。
 4. 打开 `https://x.com` 验证普通帖、文章时间线摘要、文章详情全文、连帖、图片、视频封面、复制和六种下载格式。
 
+工具栏图标和生图窗口内的默认设置均打开扩展本地页面。v0.4.0 首次在 X 页面运行时，会尝试把旧 `mcard.wlz.si` origin 下的设置迁移一次；迁移标记保存在 `chrome.storage.local`。不同 Chrome 配置文件仍互不共享。
+
 ## 当前边界
 
 - 视频“素材包”会尝试保存当前视频 URL；X 若只暴露 `blob:` 或分片流，仍不等于可移植 MP4 下载。
 - 连帖识别依赖 X 当前 DOM 的连接线，X 改版后需要现网回归。
 - 上游的网页编辑器有未启用组件和类型债务；生产构建可通过，`pnpm typecheck` 会如实列出它们。
+- 云端回退是静态页面，不保存用户帖子或设置到服务端数据库；设置仍属于用户浏览器对应 origin 的 IndexedDB。
 
 ## MPL-2.0
 

@@ -11,7 +11,8 @@ M.Card is a self-hosted Chrome extension for turning X posts, threads, and X Art
 - Preserve headings, paragraphs, lists, quotes, dividers, and inline image order on article detail pages.
 - Export PNG, JPEG, SVG, Markdown, JSON, or an asset ZIP.
 - Configure width, padding, font size and family, image layout, background, border, visible fields, watermark, format, and 1x-4x export scale.
-- Persist every default locally in IndexedDB. Toast controls are temporary overrides for the current generation session.
+- Render cards inside the extension by default, with `mcard.wlz.si` as an automatic cloud fallback.
+- Persist every default locally in extension-origin IndexedDB. Toast controls are temporary overrides for the current generation session.
 - Enable or disable a customizable watermark, enabled as `@wlzh` by default.
 
 ## Install The Extension
@@ -27,7 +28,7 @@ Open `chrome://extensions`, enable Developer mode, choose **Load unpacked**, and
 build/chrome-mv3-prod/
 ```
 
-The extension renderer is compiled to use `https://mcard.wlz.si/independent`. Rebuild it after changing `PLASMO_PUBLIC_RENDERER_URL`.
+The production build includes `tabs/renderer.html` and uses it first. `PLASMO_PUBLIC_RENDERER_URL` only configures the cloud fallback; rebuild after changing it.
 
 ## Development
 
@@ -42,7 +43,7 @@ pnpm build:next
 pnpm build:extension:prod
 ```
 
-The Next.js application is a static export deployed on Cloudflare Pages; no VPS is required. See [SELF_HOSTING_ZH.md](SELF_HOSTING_ZH.md) for deployment and credential handling, [ARTICLE_SETTINGS_AUDIT_ZH.md](ARTICLE_SETTINGS_AUDIT_ZH.md) for the settings contract, and [PROJECT_AUDIT_ZH.md](PROJECT_AUDIT_ZH.md) for implementation boundaries.
+The optional fallback site is a static Next.js export deployed on Cloudflare Pages; no VPS is required. See [SELF_HOSTING_ZH.md](SELF_HOSTING_ZH.md) for deployment and credential handling, [ARTICLE_SETTINGS_AUDIT_ZH.md](ARTICLE_SETTINGS_AUDIT_ZH.md) for the settings contract, [PROJECT_AUDIT_ZH.md](PROJECT_AUDIT_ZH.md) for implementation boundaries, and [FEATURE_GAP_AUDIT_ZH.md](FEATURE_GAP_AUDIT_ZH.md) for the remaining capability gaps.
 
 ## License
 

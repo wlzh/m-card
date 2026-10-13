@@ -146,9 +146,45 @@ export const sendMessageToIframe = async (name: string, data: any, timeout: numb
   if (!iframe || !iframe.contentWindow) {
     throw new Error('Invalid iframe');
   }
+  const switchToCloud = async () => {
+    const fallbackSrc = iframe.dataset.fallbackSrc;
+    if (!fallbackSrc) throw new Error('Cloud renderer fallback is unavailable');
+    let localSettings: any = null;
+    try {
+      localSettings = await iframeMessageSystem.publish(iframe, 'export-card-settings', {}, 2000);
+    } catch {
+      // A completely unavailable local frame cannot provide settings; cloud uses its saved defaults.
+    }
+    iframe.dataset.rendererMode = 'cloud';
+    await new Promise<void>((resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error('Cloud renderer load timeout')), 8000);
+      iframe.addEventListener('load', () => {
+        clearTimeout(timer);
+        resolve();
+      }, { once: true });
+      iframe.src = fallbackSrc;
+    });
+    await iframeMessageSystem.publish(iframe, 'renderer-ping', {}, 3000);
+    if (localSettings) {
+      await iframeMessageSystem.publish(iframe, 'import-card-settings', localSettings, 5000);
+    }
+    console.warn('[m-card] Local renderer unavailable; using cloud fallback');
+  };
+
   try {
-    const value = await iframeMessageSystem.publish(iframe, name, data, timeout);
-    return value;
+    try {
+      await iframeMessageSystem.publish(iframe, 'renderer-ping', {}, 2500);
+    } catch (localError) {
+      if (iframe.dataset.rendererMode !== 'local') throw localError;
+      await switchToCloud();
+    }
+    try {
+      return await iframeMessageSystem.publish(iframe, name, data, timeout);
+    } catch (renderError) {
+      if (iframe.dataset.rendererMode !== 'local') throw renderError;
+      await switchToCloud();
+      return await iframeMessageSystem.publish(iframe, name, data, timeout);
+    }
   } catch (error) {
     console.error('Error sending message to iframe:', error);
     throw error;

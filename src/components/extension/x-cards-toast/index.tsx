@@ -18,6 +18,7 @@ import TweetControl from './tweet-control';
 import { exportAsAsset, exportAsJSON, tweet2Markdown } from '@src/app/utils/export';
 import ScaleControl from './scale-control';
 import FontControl from './font-control';
+import { getLocalRendererUrl } from '@src/config/renderer';
 
 
 interface PreviewToastProps {
@@ -49,7 +50,7 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
     // 与隐藏渲染 iframe 同源，共享本机 IndexedDB —— 改完即存，生成即刻生效
     const [showSettings, setShowSettings] = useState(false);
     const initialGenerationPending = useRef(true);
-    const settingsPanelUrl = process.env.PLASMO_PUBLIC_RENDERER_URL || "http://localhost:1947/independent";
+    const settingsPanelUrl = getLocalRendererUrl();
 
     // 默认宽度反查档位（sm/md/lg/xl）；面板自定义宽度不在档位内则不高亮
     const defaultWidthKey = uiDefaults.width != null

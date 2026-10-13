@@ -2,7 +2,8 @@ import { readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 
 const root = 'build/chrome-mv3-prod';
-const expected = 'https://mcard.wlz.si/independent';
+const expectedCloudFallback = 'https://mcard.wlz.si/independent';
+const expectedLocalPage = 'tabs/renderer.html';
 const forbidden = 'http://localhost:1947/independent';
 
 async function files(dir) {
@@ -14,12 +15,19 @@ async function files(dir) {
 }
 
 const scripts = (await files(root)).filter((path) => path.endsWith('.js'));
+const localPage = await readFile(join(root, expectedLocalPage), 'utf8');
 const contents = await Promise.all(scripts.map(async (path) => [path, await readFile(path, 'utf8')]));
-const expectedFiles = contents.filter(([, content]) => content.includes(expected)).map(([path]) => path);
+const fallbackFiles = contents.filter(([, content]) => content.includes(expectedCloudFallback)).map(([path]) => path);
+const localPageFiles = contents.filter(([, content]) => content.includes(expectedLocalPage)).map(([path]) => path);
 const forbiddenFiles = contents.filter(([, content]) => content.includes(forbidden)).map(([path]) => path);
+const manifest = JSON.parse(await readFile(join(root, 'manifest.json'), 'utf8'));
+const localPageExposed = manifest.web_accessible_resources?.some((entry) =>
+  entry.matches?.includes('https://x.com/*') && entry.resources?.includes(expectedLocalPage));
 
-if (!expectedFiles.length || forbiddenFiles.length) {
-  console.error(JSON.stringify({ expected, expectedFiles, forbiddenFiles }, null, 2));
+const localPageHasBundle = /<script[^>]+src="[^"]+\.js"/.test(localPage);
+
+if (!fallbackFiles.length || !localPageFiles.length || !localPageExposed || !localPageHasBundle || forbiddenFiles.length) {
+  console.error(JSON.stringify({ expectedCloudFallback, fallbackFiles, expectedLocalPage, localPageFiles, localPageExposed, localPageHasBundle, forbiddenFiles }, null, 2));
   process.exit(1);
 }
-console.log(`Verified production renderer in ${expectedFiles.length} extension bundle(s).`);
+console.log(`Verified local-first renderer with cloud fallback in ${fallbackFiles.length} extension bundle(s).`);
