@@ -51,3 +51,30 @@ test('tweet collection identity remains stable while editable text changes', () 
     exports.getTweetIdentity({ ...original, authorUrl: 'https://x.com/other' }),
   );
 });
+
+test('renderer URL falls back without throwing after extension context invalidation', () => {
+  const source = fs.readFileSync('src/config/renderer.ts', 'utf8');
+  const overlay = fs.readFileSync('src/contents/plasmo-overlay.tsx', 'utf8');
+  const exports = {};
+  const invalidatedChrome = {
+    runtime: {
+      get id() { throw new Error('Extension context invalidated.'); },
+      getURL() { throw new Error('Extension context invalidated.'); },
+    },
+  };
+
+  vm.runInNewContext(transpile('src/config/renderer.ts'), {
+    exports,
+    process: { env: {} },
+    URL,
+    chrome: invalidatedChrome,
+  });
+
+  assert.match(source, /isExtensionContextAvailable/);
+  assert.match(source, /return CLOUD_RENDERER_URL/);
+  assert.match(source, /message\.includes\('Extension context invalidated'\)/);
+  assert.equal(exports.getLocalRendererUrl(), 'https://mcard.wlz.si/independent');
+  assert.match(overlay, /if \(!isExtensionContextAvailable\(\)\) return/);
+  assert.match(overlay, /isExtensionContextInvalidatedError\(error\)/);
+  assert.match(overlay, /data-renderer-mode=\{rendererMode\}/);
+});

@@ -2,6 +2,12 @@
 
 本文件记录 M.Card(x-cards 自托管分支)的版本变更。扩展版本号跟随 `package.json` 的 `version` 字段(Plasmo 构建时会写入扩展 manifest)。
 
+## v0.4.9 (2026-10-13)
+
+- 修复重新加载扩展后，旧 X 标签页继续执行 content script 时产生未捕获的 `Extension context invalidated` 错误。
+- 本地渲染器地址读取会先检查扩展上下文；上下文已失效时安全回退云端渲染器，不再直接调用失效的 `chrome.runtime`。
+- 云端设置迁移的 `chrome.storage` 读写全部纳入异常边界；上下文失效时静默跳过，刷新页面后再正常迁移。
+
 ## v0.4.8 (2026-10-13)
 
 - 修复预览图片已经生成后，推文操作栏的 loading 图标仍持续旋转的问题。
