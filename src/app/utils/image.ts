@@ -33,7 +33,6 @@ export const generateImage = async (options: {
     // 存储原始尺寸
     const originalWidth = cardEle.style.width;
     const originalHeight = cardEle.style.height;
-    console.log('fontFamily', fontFamily);
 
     try {
         await document.fonts.ready;

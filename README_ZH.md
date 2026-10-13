@@ -49,6 +49,7 @@ build/chrome-mv3-prod/
 pnpm install --frozen-lockfile
 pnpm dev:next
 pnpm dev:plasmo
+pnpm typecheck
 pnpm test
 pnpm build:next
 pnpm build:extension:prod

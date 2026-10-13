@@ -3,6 +3,7 @@ import { extractPostContent } from './article';
 
 import { domToPng, domToJpeg, domToSvg, type Options, createContext, destroyContext } from 'modern-screenshot'
 import type { XConfig } from '@src/hooks/useCardStore';
+import type { CardConfig } from '@src/components/extension/use-tweet-collection';
 import { iframeMessageSystem } from './IFrameMessageSystem';
 import { checkAppliedStyle, getAdjacentCellDiv, traverseAndCheck } from './element';
 
@@ -10,7 +11,7 @@ import { checkAppliedStyle, getAdjacentCellDiv, traverseAndCheck } from './eleme
 
 export function checkTheVerticalLine(element) {
   if (!element) return false;
-  const styleProperties = [['width', '2px'], ['flex-grow', '1']];
+  const styleProperties: Array<[string, string]> = [['width', '2px'], ['flex-grow', '1']];
   if (checkAppliedStyle(element, styleProperties)) return true;
   return false;
 }
@@ -67,7 +68,6 @@ export const getPostThread = (postElement) => {
   // let nextPost = getAdjacentCellDiv(postElement, 'next');
   let nextPost = getAdjacentCellDiv(postElement, 'next');
   const isEndThread = !traverseAndCheck(postElement, (element) => { return checkTheVerticalLine(element) });
-  console.log('isEndThread', isEndThread, postElement);
   if (isEndThread) {
     return postThread;
   }
@@ -75,7 +75,6 @@ export const getPostThread = (postElement) => {
     if (!nextPost) break;
     if (isElementVisible(nextPost)) {
       const nextPostIsThread = traverseAndCheck(nextPost, (element) => { return checkTheVerticalLine(element) });
-      console.log('nextPostIsThread', nextPostIsThread, nextPost);
       postThread.push(nextPost);
       if (!nextPostIsThread) {
         break;
@@ -114,7 +113,6 @@ export const copyImage: CopyImage = async (tweetInfo, cardConfig = {}) => {
       })
     ]);
 
-    console.log('Image copied to clipboard successfully');
     return imageDataUrl;
   } catch (err) {
     console.error('Failed to copy image:', err);
@@ -123,7 +121,7 @@ export const copyImage: CopyImage = async (tweetInfo, cardConfig = {}) => {
 }
 
 
-export const downloadImage = async (tweetInfo: XConfig | XConfig[], cardConfig = {}) => {
+export const downloadImage = async (tweetInfo: XConfig | XConfig[], cardConfig: Partial<CardConfig> = {}) => {
 
   const format2Array = _.isArray(tweetInfo) ? tweetInfo : [tweetInfo];
 
@@ -223,20 +221,19 @@ export function extractTweetInfo(postElement: Element | null) {
   //console.log('authorUrls', authorUrls);
 
   //账号URL
-  tweet.authorUrl = authorUrls.length > 0 ? authorUrls[0] : null;
+  tweet.authorUrl = authorUrls.length > 0 ? authorUrls[0] : '';
 
   //帖子URL
   const xPostStatusUrls = Array.from(postElement.querySelectorAll<HTMLAnchorElement>('a[href*="/status/"]')).map(a => a.href).filter(href => /\/status\/\d+(?:\?.*)?$/.test(href));
   //console.log('xPostStatusUrls', xPostStatusUrls);
-  tweet.url = xPostStatusUrls.length > 0 ? xPostStatusUrls[0] : null;
+  tweet.url = xPostStatusUrls.length > 0 ? xPostStatusUrls[0] : '';
 
   tweet.username = userInfoDiv.querySelector('div[dir="ltr"]')?.textContent || userInfoDiv.textContent || '';
   let timeStr = userInfoDiv.querySelector('time')?.getAttribute('datetime');
   // console.log('timeStr', timeStr, postElement.querySelector('time'));
-  tweet.time = new Date(timeStr).getTime() / 1000;
+  tweet.time = timeStr ? new Date(timeStr).getTime() / 1000 : 0;
   if (/\/status\/\d+(?:\?.*)?$/.test(window.location.href)) {
     timeStr = postElement.querySelector('time')?.getAttribute('datetime');
-    console.log('timeStr', timeStr);
     if (timeStr) {
       tweet.time = new Date(timeStr).getTime() / 1000;
     }
@@ -251,13 +248,6 @@ export function extractTweetInfo(postElement: Element | null) {
     tweet.text = tweet.text.replace(tagText, ''); // 从文本中移除标签
   });
   tweet.text = tweet.text.trim(); // 移除可能的多余空格
-
-  console.log('[m-card] extract:', {
-    title: tweet.title ? `${tweet.title.slice(0, 40)}…(${tweet.title.length})` : '(none)',
-    textLength: tweet.text.length,
-    images: tweet.images?.length ?? 0,
-  });
-
 
   // 提取图片（如果有）
   const images = _.compact([

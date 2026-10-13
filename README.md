@@ -40,6 +40,7 @@ Requires Node.js 20 and pnpm 9.15.4.
 pnpm install --frozen-lockfile
 pnpm dev:next
 pnpm dev:plasmo
+pnpm typecheck
 pnpm test
 pnpm build:next
 pnpm build:extension:prod

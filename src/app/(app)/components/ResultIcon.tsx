@@ -4,8 +4,28 @@ import React, { useId } from "react";
 
 // import { SettingsType } from "../lib/types";
 
+export interface ResultIconSettings {
+    backgroundFillType: "Solid" | "Linear" | "Radial" | string;
+    backgroundStartColor: string;
+    backgroundEndColor: string;
+    backgroundAngle?: number;
+    backgroundPosition?: string;
+    backgroundSpread?: number;
+    backgroundRadius?: number;
+    backgroundStrokeSize?: number;
+    backgroundStrokeColor?: string;
+    backgroundStrokeOpacity?: number;
+    backgroundRadialGlare?: boolean;
+    backgroundNoiseTexture?: boolean;
+    backgroundNoiseTextureOpacity?: number;
+    iconSize?: number;
+    iconOffsetX?: number;
+    iconOffsetY?: number;
+    iconColor?: string;
+}
+
 type PropTypes = {
-    //   settings: SettingsType;
+    settings: ResultIconSettings;
     size?: number;
     isPreview?: boolean;
     // TODO: fix icon type?
@@ -20,7 +40,7 @@ export const normalizeGradientSpread = (spread: unknown): number => {
 
 const ResultIcon = React.forwardRef<SVGSVGElement, PropTypes>(
     ({ settings, size = 512, isPreview, IconComponent }, svgRef) => {
-        const strokeSize = isPreview ? 0 : settings.backgroundStrokeSize;
+        const strokeSize = isPreview ? 0 : (settings.backgroundStrokeSize ?? 0);
         const strokeWidth = isNaN(parseInt(strokeSize.toString())) ? 0 : parseInt(strokeSize.toString());
 
         const rectId = useId().replace(/:/g, "");
@@ -46,11 +66,11 @@ const ResultIcon = React.forwardRef<SVGSVGElement, PropTypes>(
                     height={size - strokeSize}
                     x={strokeSize / 2}
                     y={strokeSize / 2}
-                    rx={settings.backgroundRadius}
+                    rx={settings.backgroundRadius ?? 0}
                     fill={settings.backgroundFillType === "Solid" ? settings.backgroundStartColor : `url(#${gradientId})`}
-                    stroke={settings.backgroundStrokeColor}
+                    stroke={settings.backgroundStrokeColor ?? "transparent"}
                     strokeWidth={strokeWidth}
-                    strokeOpacity={`${settings.backgroundStrokeOpacity}%`}
+                    strokeOpacity={`${settings.backgroundStrokeOpacity ?? 100}%`}
                     paintOrder="stroke"
                 />
 
@@ -61,7 +81,7 @@ const ResultIcon = React.forwardRef<SVGSVGElement, PropTypes>(
                         x={strokeSize / 2}
                         y={strokeSize / 2}
                         fill={`url(#${radialGlareGradientId})`}
-                        rx={settings.backgroundRadius}
+                        rx={settings.backgroundRadius ?? 0}
                         style={{ mixBlendMode: "overlay" }}
                     />
                 ) : null}
@@ -74,7 +94,7 @@ const ResultIcon = React.forwardRef<SVGSVGElement, PropTypes>(
                         x={strokeSize / 2}
                         y={strokeSize / 2}
                         clipPath="url(#clip)"
-                        opacity={`${settings.backgroundNoiseTextureOpacity}%`}
+                        opacity={`${settings.backgroundNoiseTextureOpacity ?? 0}%`}
                     />
                 ) : null}
                 <clipPath id="clip">
@@ -121,10 +141,10 @@ const ResultIcon = React.forwardRef<SVGSVGElement, PropTypes>(
 
                 {IconComponent ? (
                     <IconComponent
-                        width={settings.iconSize}
-                        height={settings.iconSize}
-                        x={(size - settings.iconSize) / 2 + +settings.iconOffsetX}
-                        y={(size - settings.iconSize) / 2 + +settings.iconOffsetY}
+                        width={settings.iconSize ?? 0}
+                        height={settings.iconSize ?? 0}
+                        x={(size - (settings.iconSize ?? 0)) / 2 + (settings.iconOffsetX ?? 0)}
+                        y={(size - (settings.iconSize ?? 0)) / 2 + (settings.iconOffsetY ?? 0)}
                         style={{ color: settings.iconColor }}
                         alignmentBaseline="middle"
                     />

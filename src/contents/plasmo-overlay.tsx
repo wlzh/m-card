@@ -29,13 +29,6 @@ const AnchorOverlay: React.FC<PlasmoCSUIProps> = ({ anchor }) => {
 
 
     useEffect(() => {
-        const unsubscribe = iframeMessageSystem.subscribe('generate-card-local', (value: any) => {
-        });
-
-        return () => unsubscribe();
-    }, []);
-
-    useEffect(() => {
         let cancelled = false;
         const migrationKey = 'mcard-cloud-settings-migrated-v1';
 

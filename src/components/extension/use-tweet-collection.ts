@@ -34,6 +34,12 @@ export interface CardUIDefaults {
     controls: TweetControlState;
 }
 
+export const getTweetIdentity = (tweet: XConfig) => {
+    if (tweet.url) return tweet.url;
+    if (tweet.authorUrl || tweet.time) return `${tweet.authorUrl}|${tweet.time}`;
+    return tweet.text;
+};
+
 interface TweetCollection {
 
     cardConfig: Partial<CardConfig>;
@@ -124,13 +130,15 @@ export const useTweetsStore = create<TweetCollection>(
             }))
         },
         removeTweet: (tweet: XConfig) => {
+            const identity = getTweetIdentity(tweet);
             set((state) => ({
-                tweets: state.tweets.filter((t) => t.id !== tweet.id)
+                tweets: state.tweets.filter((item) => getTweetIdentity(item) !== identity)
             }))
         },
         updateTweet: (tweet: XConfig) => {
+            const identity = getTweetIdentity(tweet);
             set((state) => ({
-                tweets: state.tweets.map((t) => t.id === tweet.id ? tweet : t)
+                tweets: state.tweets.map((item) => getTweetIdentity(item) === identity ? tweet : item)
             }))
         },
         moveTweet: (from: number, to: number) => {

@@ -1,4 +1,4 @@
-import { CommonLayouts } from '@src/hooks/useCardStore';
+import { CommonLayouts, type LayoutOption } from '@src/hooks/useCardStore';
 import React from 'react';
 import styled from 'styled-components';
 
@@ -23,9 +23,9 @@ const Option = styled.div`
     }
 `;
 
-const RatioBox = styled.div`
-    width: ${props => props.boxWidth}px;
-    height: ${props => props.boxHeight}px;
+const RatioBox = styled.div<{ $boxWidth: number; $boxHeight: number }>`
+    width: ${props => props.$boxWidth}px;
+    height: ${props => props.$boxHeight}px;
     border: 1px solid #38444D;
     display: flex;
     justify-content: center;
@@ -41,11 +41,11 @@ const Dimensions = styled.div`
     color: #8899A6;
 `;
 
-const LayoutOptions = ({ onSelect }) => {
+const LayoutOptions = ({ onSelect }: { onSelect: (option: LayoutOption) => void }) => {
 
     const [selectedLayout, setSelectedLayout] = React.useState(CommonLayouts.layoutOptions[0]);
 
-    const getRatioBoxDimensions = (ratio) => {
+    const getRatioBoxDimensions = (ratio: LayoutOption['ratio']) => {
         const [width, height] = ratio.split(':').map(Number);
         const baseSize = 40;
         let boxWidth, boxHeight;
@@ -75,7 +75,7 @@ const LayoutOptions = ({ onSelect }) => {
                             backgroundColor: selectedLayout.ratio === option.ratio ? '#1c1c1c' : ''
                         }}
                     >
-                        <RatioBox boxWidth={boxWidth} boxHeight={boxHeight}>
+                        <RatioBox $boxWidth={boxWidth} $boxHeight={boxHeight}>
                             {option.ratio}
                         </RatioBox>
                         <Dimensions>

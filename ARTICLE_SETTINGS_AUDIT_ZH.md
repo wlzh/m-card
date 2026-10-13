@@ -1,4 +1,4 @@
-# M.Card 0.4.2 文章与设置核对
+# M.Card 0.4.3 文章与设置核对
 
 核对日期：2026-10-13。示例：https://x.com/wlzh/status/2109433207318081885
 
@@ -44,6 +44,6 @@
 
 ## 验证与剩余验收
 
-- `pnpm test` 覆盖文章选择器、图文顺序、摘要/引用隔离、预览空态、页脚布局、渲染参数、八张配图和持久化恢复。DOM 与 IndexedDB 测试替身不冒充安装环境验收。
-- Next.js 与 Chrome 扩展生产构建是发布门禁；`pnpm typecheck` 仍会如实列出上游未挂载组件的旧类型债务。
+- `pnpm test` 覆盖文章选择器、图文顺序、摘要/引用隔离、预览空态、页脚布局、渲染参数、八张配图、持久化恢复、跨域样式表和帖子身份。DOM 与 IndexedDB 测试替身不冒充安装环境验收。
+- `pnpm typecheck`、Next.js 和 Chrome 扩展生产构建共同作为发布门禁。
 - Cloudflare 发布后必须分别检查 Pages 默认域名与 `https://mcard.wlz.si/independent`；重新加载后的 Chrome 扩展还需单独检查本地渲染和断网/故障回退，不能以构建通过代替安装环境验收。

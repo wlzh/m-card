@@ -1,12 +1,12 @@
 import { cn } from "@lib/utils";
 import { ColorChangeHandler, SketchPicker } from "react-color";
-import ResultIcon from "../ResultIcon";
+import ResultIcon, { type ResultIconSettings } from "../ResultIcon";
 
 import { AccordionContent, AccordionTrigger, AccordionItem } from "@components/ui/accordion";
 import { useCardStore } from "@src/hooks/useCardStore";
 import { ColorPicker } from "@components/ui/color-picker";
 
-export const presets: PresetType[] = [
+export const presets: ResultIconSettings[] = [
     {
         backgroundFillType: "Linear",
         backgroundStartColor: "#FF7DB4",

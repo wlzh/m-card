@@ -11,7 +11,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 
 chrome.runtime.onInstalled.addListener(function (details) {
-    console.log('onInstalled', details);
     if (details.reason == "install") {
         chrome.tabs.create({ url: welcomeUrl });
     }

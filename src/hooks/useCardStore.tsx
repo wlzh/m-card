@@ -105,9 +105,9 @@ export interface XConfig {
     },
     tags?: string[],
     images: string[],
-    replies: number,
-    likes: number,
-    shares: number,
+    replies: number | string,
+    likes: number | string,
+    shares: number | string,
     time: number,
 }
 

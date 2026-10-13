@@ -16,6 +16,8 @@ v0.4.0 起采用本地优先架构：
 
 ```bash
 pnpm install --frozen-lockfile
+pnpm typecheck
+pnpm test
 NEXT_PUBLIC_SITE_URL=https://mcard.wlz.si pnpm build:next
 pnpm build:extension:prod
 pnpm package:extension:prod

@@ -223,7 +223,6 @@ export const BackgroundController = (props) => {
                             max={1}
                             min={0}
                             onValueChange={(v) => {
-                                console.log('v', v);
                                 updateCardStyles({
                                     noiseTextureOpacity: v[0],
                                 });

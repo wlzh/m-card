@@ -4,7 +4,6 @@ import { useMemo, useEffect } from "react"
 
 import { presets } from "./color"
 import { TwitterCard } from "./twitter-card"
-import { WeChatCard } from "./wechat-card"
 
 export const Display = () => {
     const colorIndex = useCardStore((state) => state.colorIndex)
@@ -92,7 +91,6 @@ export const Display = () => {
                 backgroundStyles={finalBackgroundStyles}
             ></TwitterCard>
 
-            {/* <WeChatCard xConfig={xConfig}></WeChatCard> */}
         </div>
     )
 }

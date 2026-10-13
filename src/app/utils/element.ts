@@ -1,4 +1,4 @@
-export function traverseAndCheck(element, condition) {
+export function traverseAndCheck(element: Element, condition: (element: Element) => boolean) {
     if (condition(element)) return true;
     return Array.from(element.children).some(child => traverseAndCheck(child, condition));
 }
@@ -16,10 +16,10 @@ export function traverseAndCheck(element, condition) {
 //     return null;
 // }
 
-export function getAdjacentCellDiv(element, direction) {
+export function getAdjacentCellDiv(element: Element, direction: 'next' | 'previous') {
     const sibling = direction === 'next' ? 'nextElementSibling' : 'previousElementSibling';
-    let current = element.closest('div[data-testid="cellInnerDiv"]');
-    while (current = current[sibling]) {
+    let current: Element | null = element.closest('div[data-testid="cellInnerDiv"]');
+    while (current && (current = current[sibling])) {
         if (current.getAttribute('data-testid') === 'cellInnerDiv') return current;
     }
     return null;
@@ -27,14 +27,20 @@ export function getAdjacentCellDiv(element, direction) {
 
 
 
-export function checkAppliedStyle(element, properties) {
-    let foundProperties = new Set();
+export function checkAppliedStyle(element: Element, properties: Array<[string, string]>) {
+    const foundProperties = new Set<string>();
 
-    for (let sheet of document.styleSheets) {
-        for (let rule of sheet.cssRules) {
-            if (element.matches(rule.selectorText)) {
+    for (const sheet of Array.from(document.styleSheets)) {
+        let rules: CSSRuleList;
+        try {
+            rules = sheet.cssRules;
+        } catch {
+            continue;
+        }
+        for (const rule of Array.from(rules)) {
+            if (rule instanceof CSSStyleRule && element.matches(rule.selectorText)) {
                 for (let [prop, value] of properties) {
-                    if (rule.style[prop] === value) {
+                    if (rule.style.getPropertyValue(prop) === value) {
                         foundProperties.add(prop);
                     }
                 }

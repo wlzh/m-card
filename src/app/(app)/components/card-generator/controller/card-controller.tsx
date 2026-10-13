@@ -67,7 +67,6 @@ export const CardController = () => {
                             max={150}
                             min={1}
                             onValueChange={(v) => {
-                                console.log('v', v);
                                 updateCardStyles({
                                     scale: v[0],
                                 });
