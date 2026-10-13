@@ -188,10 +188,10 @@ const CardLogo = ({ xConfig }) => {
 
 const Watermark = ({ text }: { text: string }) => {
     return (
-        <div className="card-footer-watermark flex justify-end" style={{ marginLeft: 'auto', paddingRight: '0.25em', flexShrink: 0 }}>
+        <div className="card-footer-watermark flex justify-end" style={{ marginLeft: 'auto', paddingRight: '0.25em', flex: '0 1 45%', minWidth: 0 }}>
             <span
                 className="whitespace-nowrap text-secondary-foreground select-none"
-                style={{ fontSize: '0.85em', fontWeight: 500, opacity: 0.55 }}
+                style={{ fontSize: '0.85em', fontWeight: 500, opacity: 0.55, overflow: 'hidden', textOverflow: 'ellipsis' }}
             >
                 {text}
             </span>
@@ -289,8 +289,8 @@ const CardFooter = ({ xConfig, controls, watermarkText }: {
             {showTime && <div className="card-footer-time text-secondary-foreground" style={{ whiteSpace: 'nowrap' }}>
                 <span>{formatTimestamp(time)}</span>
             </div>}
-            {(showActions || watermarkText) && <div className="card-footer-bottom" style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '0.75em' }}>
-                {showActions && <div className="card-footer-actions text-secondary-foreground" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.35em 1em', minWidth: 0 }}>
+            {(showActions || watermarkText) && <div className="card-footer-bottom" style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '0.75em', minWidth: 0 }}>
+                {showActions && <div className="card-footer-actions text-secondary-foreground" style={{ display: 'flex', flex: '1 0 auto', flexWrap: 'nowrap', alignItems: 'baseline', gap: '0.75em', minWidth: 0, whiteSpace: 'nowrap' }}>
                     {['replies', 'shares', 'likes'].map((stat) => (
                         <div key={stat} className="whitespace-nowrap">
                             <span className="font-medium" style={{ color: "var(--textPrimary)" }}>

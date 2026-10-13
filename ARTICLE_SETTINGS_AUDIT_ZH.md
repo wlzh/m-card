@@ -1,4 +1,4 @@
-# M.Card 0.4.4 文章与设置核对
+# M.Card 0.4.5 文章与设置核对
 
 核对日期：2026-10-13。示例：https://x.com/wlzh/status/2109433207318081885
 
@@ -29,8 +29,8 @@
 | Image Layout | auto | 自动或 vertical/grid2/grid4；所有模式保留全部图片 |
 | User / Logo | 开 | 作者信息/X 标志；对应快捷 Controls |
 | Footer | 开 | 时间和互动数据的总开关 |
-| Time / Actions | 开 | 脚注内部各自控制；时间固定单行，互动项在下一行安全换行 |
-| Watermark | 开，@wlzh | 单独的水印开关和文字，不受 Footer 影响；与最后一条互动数据底行右对齐 |
+| Time / Actions | 开 | 脚注内部各自控制；时间单独一行，replies/shares/likes 在下一行保持单行 |
+| Watermark | 开，@wlzh | 单独的水印开关和文字，不受 Footer 影响；与互动数据按文字基线右对齐，过长时在水印区域省略 |
 | Preset Color | 见 factorySettings.colorIndex | 快捷色板；选择预设退出自定义渐变/颜色/图片 |
 | Custom Color | 关 | 自定义背景色；优先级低于开启的 Gradient |
 | Background Opacity / Blur | 1 / 0px | 正确保存数值并应用 CSS |

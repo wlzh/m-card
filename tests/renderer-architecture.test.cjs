@@ -11,7 +11,7 @@ test('extension exposes and selects the bundled renderer by default', () => {
   const overlay = read('src/contents/plasmo-overlay.tsx');
   const renderer = read('src/tabs/renderer.tsx');
 
-  assert.equal(pkg.version, '0.4.4');
+  assert.equal(pkg.version, '0.4.5');
   assert.ok(pkg.manifest.web_accessible_resources.some((entry) =>
     entry.matches.includes('https://x.com/*') && entry.resources.includes('tabs/renderer.html')));
   assert.match(overlay, /src=\{localRendererURL\}/);

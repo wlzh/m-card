@@ -47,7 +47,7 @@ test('footer sub-controls independently hide time and metrics', () => {
   assert.ok(noActions.includes('TEST_TIME'));
   assert.ok(!noActions.includes('likes'));
 });
-test('footer keeps time separate and aligns watermark with the final metrics row', () => {
+test('footer keeps time separate and keeps metrics on the watermark baseline', () => {
   const doc = render();
   const footer = doc.querySelector('.card-footer');
   const time = doc.querySelector('.card-footer-time');
@@ -58,11 +58,15 @@ test('footer keeps time separate and aligns watermark with the final metrics row
   assert.equal(footer.style.flexDirection, 'column');
   assert.notEqual(footer.style.gap, '');
   assert.equal(time.style.whiteSpace, 'nowrap');
-  assert.equal(actions.style.flexWrap, 'wrap');
+  assert.equal(actions.style.flexWrap, 'nowrap');
+  assert.equal(actions.style.whiteSpace, 'nowrap');
   assert.notEqual(actions.style.gap, '');
   assert.equal(bottom.style.display, 'flex');
-  assert.equal(bottom.style.alignItems, 'flex-end');
+  assert.equal(bottom.style.alignItems, 'baseline');
   assert.equal(watermark.style.marginLeft, 'auto');
+  assert.equal(watermark.style.flex, '0 1 45%');
+  assert.equal(watermark.style.minWidth, '0');
+  assert.equal(watermark.querySelector('span').style.textOverflow, 'ellipsis');
 });
 test('watermark supports persisted custom value and off state independently of footer', () => {
   assert.ok(render({ watermark: { enabled: true, text: 'CUSTOM' }, controls: {} }).body.textContent.includes('CUSTOM'));
