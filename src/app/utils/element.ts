@@ -3,6 +3,30 @@ export function traverseAndCheck(element: Element, condition: (element: Element)
     return Array.from(element.children).some(child => traverseAndCheck(child, condition));
 }
 
+const nextAnimationFrame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+
+export async function traverseAndCheckAsync(
+    element: Element,
+    condition: (element: Element) => boolean,
+    frameBudgetMs = 4,
+) {
+    const pending = [element];
+    let frameStartedAt = performance.now();
+
+    while (pending.length) {
+        const current = pending.pop();
+        if (!current) continue;
+        if (condition(current)) return true;
+        pending.push(...Array.from(current.children));
+
+        if (performance.now() - frameStartedAt >= frameBudgetMs) {
+            await nextAnimationFrame();
+            frameStartedAt = performance.now();
+        }
+    }
+    return false;
+}
+
 
 // export function getAdjacentCellDiv(element, direction) {
 //     let currentElement = element.closest('div[data-testid="cellInnerDiv"]');

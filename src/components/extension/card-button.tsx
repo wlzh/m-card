@@ -1,8 +1,7 @@
 import { DynamicStyleTippyComponent } from "@src/app/(app)/components/dynamic-style-tippy";
 import { useRef, useState } from "react";
-import { extractTweetInfo, getPostThread } from "@src/app/utils";
+import { extractTweetInfo, getPostThreadAsync } from "@src/app/utils";
 import toast from 'react-hot-toast';
-import * as _ from 'lodash-es';
 import { PreviewToast } from "./x-cards-toast";
 import { useTweetsStore } from "./use-tweet-collection";
 import type { PlasmoCSUIAnchor } from "plasmo";
@@ -11,6 +10,23 @@ import { Plus } from "lucide-react";
 const waitForLoadingIndicator = () => new Promise<void>((resolve) => {
     requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
 });
+
+const waitForNextFrame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+
+const extractTweetThread = async (postElement: Element) => {
+    const tweetInfo = extractTweetInfo(postElement);
+    if (!tweetInfo) throw new Error('Unable to read this post from the current X page');
+
+    await waitForNextFrame();
+    const thread = await getPostThreadAsync(postElement);
+    const tweetInfos = [];
+    for (const element of thread) {
+        const info = element === postElement ? tweetInfo : extractTweetInfo(element);
+        if (info) tweetInfos.push(info);
+        await waitForNextFrame();
+    }
+    return { tweetInfo, tweetInfos };
+};
 
 export const CardButton: React.FC<{
     anchor: PlasmoCSUIAnchor
@@ -38,10 +54,8 @@ export const CardButton: React.FC<{
         let previewOpened = false;
         try {
             const postElement = anchor.element.closest('article[data-testid="tweet"]');
-            const tweetInfo = extractTweetInfo(postElement)
-            if (!tweetInfo) throw new Error('Unable to read this post from the current X page');
-            const thread = getPostThread(postElement);
-            const tweetInfos = _.compact(thread?.map(e => extractTweetInfo(e)));
+            if (!postElement) throw new Error('Unable to find this post on the current X page');
+            const { tweetInfo, tweetInfos } = await extractTweetThread(postElement);
 
             useTweetsStore.setState((state) => {
                 state.tweets = tweetInfos.length ? tweetInfos : [tweetInfo];
@@ -83,10 +97,8 @@ export const CardButton: React.FC<{
         if (!await beginLoading()) return;
         try {
             const postElement = anchor.element.closest('article[data-testid="tweet"]');
-            const tweetInfo = extractTweetInfo(postElement)
-            if (!tweetInfo) throw new Error('Unable to read this post from the current X page');
-            const thread = getPostThread(postElement);
-            const tweetInfos = _.compact(thread?.map(e => extractTweetInfo(e)));
+            if (!postElement) throw new Error('Unable to find this post on the current X page');
+            const { tweetInfo, tweetInfos } = await extractTweetThread(postElement);
             useTweetsStore.setState((state) => {
                 state.tweets = [
                     ...state.tweets,
@@ -150,6 +162,7 @@ export const CardButton: React.FC<{
                         {isLoading ? (
                             <svg
                                 className="animate-spin"
+                                style={{ willChange: 'transform' }}
                                 viewBox="0 0 1024 1024"
                                 xmlns="http://www.w3.org/2000/svg"
                                 width={22.5}

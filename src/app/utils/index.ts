@@ -5,15 +5,14 @@ import { domToPng, domToJpeg, domToSvg, type Options, createContext, destroyCont
 import type { XConfig } from '@src/hooks/useCardStore';
 import type { CardConfig } from '@src/components/extension/use-tweet-collection';
 import { iframeMessageSystem } from './IFrameMessageSystem';
-import { checkAppliedStyle, getAdjacentCellDiv, traverseAndCheck } from './element';
+import { getAdjacentCellDiv, traverseAndCheck, traverseAndCheckAsync } from './element';
 
 
 
 export function checkTheVerticalLine(element) {
   if (!element) return false;
-  const styleProperties: Array<[string, string]> = [['width', '2px'], ['flex-grow', '1']];
-  if (checkAppliedStyle(element, styleProperties)) return true;
-  return false;
+  const style = window.getComputedStyle(element);
+  return style.width === '2px' && style.flexGrow === '1';
 }
 
 
@@ -79,6 +78,38 @@ export const getPostThread = (postElement) => {
       if (!nextPostIsThread) {
         break;
       }
+    }
+    nextPost = getAdjacentCellDiv(nextPost, 'next');
+  }
+
+  return postThread;
+}
+
+export const getPostThreadAsync = async (postElement: Element) => {
+  const isElementVisible = (element: Element) => (element as HTMLElement).offsetHeight !== 0;
+  const hasThreadLine = (element: Element) => traverseAndCheckAsync(element, checkTheVerticalLine);
+  const postThread = [postElement];
+
+  let prePost = getAdjacentCellDiv(postElement, 'previous');
+  while (prePost) {
+    if (isElementVisible(prePost)) {
+      if (await hasThreadLine(prePost)) {
+        postThread.unshift(prePost);
+      } else {
+        break;
+      }
+    }
+    prePost = getAdjacentCellDiv(prePost, 'previous');
+  }
+
+  let nextPost = getAdjacentCellDiv(postElement, 'next');
+  if (!await hasThreadLine(postElement)) return postThread;
+
+  while (nextPost) {
+    if (isElementVisible(nextPost)) {
+      const nextPostIsThread = await hasThreadLine(nextPost);
+      postThread.push(nextPost);
+      if (!nextPostIsThread) break;
     }
     nextPost = getAdjacentCellDiv(nextPost, 'next');
   }

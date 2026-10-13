@@ -25,6 +25,17 @@ test('thread style detection ignores inaccessible cross-origin stylesheets', () 
   assert.equal(exports.checkAppliedStyle({ matches: () => false }, [['width', '2px']]), false);
 });
 
+test('thread traversal is time sliced instead of scanning the entire DOM in one task', () => {
+  const source = fs.readFileSync('src/app/utils/element.ts', 'utf8');
+  const utils = fs.readFileSync('src/app/utils/index.ts', 'utf8');
+
+  assert.match(source, /export async function traverseAndCheckAsync/);
+  assert.match(source, /performance\.now\(\) - frameStartedAt >= frameBudgetMs/);
+  assert.match(source, /await nextAnimationFrame\(\)/);
+  assert.match(utils, /window\.getComputedStyle\(element\)/);
+  assert.doesNotMatch(utils, /checkAppliedStyle\(element/);
+});
+
 test('tweet collection identity remains stable while editable text changes', () => {
   const exports = {};
   vm.runInNewContext(transpile('src/components/extension/use-tweet-collection.ts'), {
