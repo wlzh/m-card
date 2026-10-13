@@ -1,5 +1,5 @@
 import { DynamicStyleTippyComponent } from "@src/app/(app)/components/dynamic-style-tippy";
-import { useMemo, useState } from "react";
+import { useRef, useState } from "react";
 import { extractTweetInfo, getPostThread } from "@src/app/utils";
 import toast from 'react-hot-toast';
 import * as _ from 'lodash-es';
@@ -8,16 +8,33 @@ import { useTweetsStore } from "./use-tweet-collection";
 import type { PlasmoCSUIAnchor } from "plasmo";
 import { Plus } from "lucide-react";
 
+const waitForLoadingIndicator = () => new Promise<void>((resolve) => {
+    requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+});
+
 export const CardButton: React.FC<{
     anchor: PlasmoCSUIAnchor
 }> = ({ anchor }) => {
     const [isLoading, setIsLoading] = useState(false);
+    const isLoadingRef = useRef(false);
 
-    const handlePreview = (e) => {
+    const beginLoading = async () => {
+        if (isLoadingRef.current) return false;
+        isLoadingRef.current = true;
+        setIsLoading(true);
+        await waitForLoadingIndicator();
+        return true;
+    }
+
+    const endLoading = () => {
+        isLoadingRef.current = false;
+        setIsLoading(false);
+    }
+
+    const handlePreview = async (e) => {
         e.stopPropagation();
         e.preventDefault();
-        if (isLoading) return;
-        setIsLoading(true);
+        if (!await beginLoading()) return;
         let previewOpened = false;
         try {
             const postElement = anchor.element.closest('article[data-testid="tweet"]');
@@ -38,7 +55,7 @@ export const CardButton: React.FC<{
                     anchor={anchor}
                     tweetInfos={tweetInfos}
                     tweetInfo={tweetInfo}
-                    onInitialGenerationEnd={() => setIsLoading(false)}
+                    onInitialGenerationEnd={endLoading}
                 ></PreviewToast>)
             }, {
                 id: 'preview-toast',
@@ -50,21 +67,20 @@ export const CardButton: React.FC<{
             toast.error(`Error copying card: ${error.message}`);
             console.error("Error generating card:", error);
         } finally {
-            if (!previewOpened) setIsLoading(false);
+            if (!previewOpened) endLoading();
         }
     }
 
     const handleDefaultClick = async (e) => {
         e.stopPropagation();
         e.preventDefault();
-        handlePreview(e);
+        await handlePreview(e);
     }
 
     const handleClick = async (e) => {
         e.stopPropagation();
         e.preventDefault();
-        if (isLoading) return;
-        setIsLoading(true);
+        if (!await beginLoading()) return;
         try {
             const postElement = anchor.element.closest('article[data-testid="tweet"]');
             const tweetInfo = extractTweetInfo(postElement)
@@ -95,12 +111,11 @@ export const CardButton: React.FC<{
             toast.error(`Error copying card: ${error.message}`);
             console.error("Error generating card:", error);
         } finally {
-            setIsLoading(false);
+            endLoading();
         }
     }
 
-    const dropdownMenu = useMemo(() => {
-        return (<div className="dropdown-menu">
+    const dropdownMenu = (<div className="dropdown-menu">
             <ul className="dropdown-menu-list">
 
                 <div className="dropdown-menu-separator" />
@@ -112,7 +127,6 @@ export const CardButton: React.FC<{
                 </li>
             </ul>
         </div>)
-    }, [])
 
     return (
         <DynamicStyleTippyComponent
