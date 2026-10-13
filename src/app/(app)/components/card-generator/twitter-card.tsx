@@ -19,17 +19,23 @@ export const TwitterCard: React.FC<TwitterCardProps> = ({ xConfig, backgroundSty
         return (
             <div className='flex flex-col gap-y-4 relative'>
                 {
-                    xConfig.map((config, index) => (
+                    xConfig.map((config, index) => {
+                        const watermarkText = index === xConfig.length - 1
+                            && cardStyles.watermark?.enabled
+                            && cardStyles.watermark?.text
+                            ? cardStyles.watermark.text
+                            : undefined;
+                        return (
                         <div className="flex flex-col h-full" key={`xConfig-${index}`}>
                             <CardHeader xConfig={config} controls={controls} />
                             <CardBody xConfig={config} cardStyles={cardStyles} />
-                            {controls.showFooter && (<CardFooter xConfig={config} controls={controls} />)}
+                            {(controls.showFooter || watermarkText) && (
+                                <CardFooter xConfig={config} controls={controls} watermarkText={watermarkText} />
+                            )}
                         </div>
-                    ))
+                        );
+                    })
                 }
-                {cardStyles.watermark?.enabled && cardStyles.watermark?.text && (
-                    <Watermark text={cardStyles.watermark.text} />
-                )}
             </div>
         )
     }, [backgroundStyles, xConfig, cardStyles]);
@@ -182,7 +188,7 @@ const CardLogo = ({ xConfig }) => {
 
 const Watermark = ({ text }: { text: string }) => {
     return (
-        <div className="flex justify-end" style={{ paddingTop: '0.75em', paddingRight: '0.25em' }}>
+        <div className="card-footer-watermark flex justify-end" style={{ marginLeft: 'auto', paddingRight: '0.25em', flexShrink: 0 }}>
             <span
                 className="whitespace-nowrap text-secondary-foreground select-none"
                 style={{ fontSize: '0.85em', fontWeight: 500, opacity: 0.55 }}
@@ -270,14 +276,21 @@ const CardBody: React.FC<{
     )
 }
 
-const CardFooter = ({ xConfig, controls }) => {
+const CardFooter = ({ xConfig, controls, watermarkText }: {
+    xConfig: XConfig,
+    controls: CardStore['cardStyles']['controls'],
+    watermarkText?: string,
+}) => {
     const time = _.isArray(xConfig) ? _.last(xConfig).time : xConfig.time;
+    const showTime = controls.showFooter && controls.showTime && Number.isFinite(time);
+    const showActions = controls.showFooter && controls.showActions;
     return (
         <div className="card-footer" style={{ display: 'flex', flexDirection: 'column', gap: '0.55em', paddingTop: '0.75em', lineHeight: 1.35 }}>
-            {controls.showTime && Number.isFinite(time) && <div className="card-footer-time text-secondary-foreground" style={{ whiteSpace: 'nowrap' }}>
+            {showTime && <div className="card-footer-time text-secondary-foreground" style={{ whiteSpace: 'nowrap' }}>
                 <span>{formatTimestamp(time)}</span>
             </div>}
-            {controls.showActions && <div className="card-footer-actions text-secondary-foreground" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.35em 1em' }}>
+            {(showActions || watermarkText) && <div className="card-footer-bottom" style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '0.75em' }}>
+                {showActions && <div className="card-footer-actions text-secondary-foreground" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.35em 1em', minWidth: 0 }}>
                     {['replies', 'shares', 'likes'].map((stat) => (
                         <div key={stat} className="whitespace-nowrap">
                             <span className="font-medium" style={{ color: "var(--textPrimary)" }}>
@@ -286,6 +299,8 @@ const CardFooter = ({ xConfig, controls }) => {
                             {stat}
                         </div>
                     ))}
+                </div>}
+                {watermarkText && <Watermark text={watermarkText} />}
             </div>}
         </div>
     );

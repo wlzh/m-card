@@ -77,7 +77,7 @@ curl --noproxy '*' -sS -L https://mcard.wlz.si/ | head -n 5
 3. 选择 `build/chrome-mv3-prod/`。
 4. 打开 `https://x.com` 验证普通帖、文章时间线摘要、文章详情全文、连帖、图片、视频封面、复制和六种下载格式。
 
-工具栏图标和生图窗口内的默认设置均打开扩展本地页面。v0.4.0 首次在 X 页面运行时，会尝试把旧 `mcard.wlz.si` origin 下的设置迁移一次；迁移标记保存在 `chrome.storage.local`。不同 Chrome 配置文件仍互不共享。
+工具栏图标打开官网，生图窗口内的“默认设置”打开扩展本地页面。v0.4.0 首次在 X 页面运行时，会尝试把旧 `mcard.wlz.si` origin 下的设置迁移一次；迁移标记保存在 `chrome.storage.local`。不同 Chrome 配置文件仍互不共享。
 
 ## 当前边界
 

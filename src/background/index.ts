@@ -1,6 +1,5 @@
-import { CLOUD_RENDERER_URL, getLocalRendererUrl } from "@src/config/renderer";
+import { CLOUD_RENDERER_URL, CLOUD_SITE_URL } from "@src/config/renderer";
 
-const rendererUrl = getLocalRendererUrl();
 const welcomeUrl = new URL("/welcome", CLOUD_RENDERER_URL).toString();
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -18,18 +17,26 @@ chrome.runtime.onInstalled.addListener(function (details) {
     }
 });
 
-// 点击工具栏图标：打开（或聚焦已存在的）卡片面板，水印/宽度/内边距等
-// 默认值都在这里设置，Save as Default 后本机生效
+// 工具栏图标用于进入官网；本地默认设置从 X 生图面板打开。
 chrome.action.onClicked.addListener(function (tab) {
     chrome.tabs.query({}, function (tabs) {
-        const panelTab = tabs.find((t) => (t.url || "").startsWith(rendererUrl));
-        if (panelTab && panelTab.id) {
-            chrome.tabs.update(panelTab.id, { active: true });
-            if (panelTab.windowId) {
-                chrome.windows.update(panelTab.windowId, { focused: true });
+        const websiteTab = tabs.find((t) => {
+            if (!t.url) return false;
+            try {
+                const url = new URL(t.url);
+                const website = new URL(CLOUD_SITE_URL);
+                return url.origin === website.origin && url.pathname === website.pathname;
+            } catch {
+                return false;
+            }
+        });
+        if (websiteTab && websiteTab.id) {
+            chrome.tabs.update(websiteTab.id, { active: true });
+            if (websiteTab.windowId) {
+                chrome.windows.update(websiteTab.windowId, { focused: true });
             }
         } else {
-            chrome.tabs.create({ url: rendererUrl });
+            chrome.tabs.create({ url: CLOUD_SITE_URL });
         }
     });
 });

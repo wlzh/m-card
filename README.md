@@ -30,6 +30,8 @@ build/chrome-mv3-prod/
 
 The production build includes `tabs/renderer.html` and uses it first. `PLASMO_PUBLIC_RENDERER_URL` only configures the cloud fallback; rebuild after changing it.
 
+Clicking the extension toolbar icon opens the website. Open local default settings from the generation panel on X.
+
 ## Development
 
 Requires Node.js 20 and pnpm 9.15.4.

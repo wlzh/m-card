@@ -47,21 +47,30 @@ test('footer sub-controls independently hide time and metrics', () => {
   assert.ok(noActions.includes('TEST_TIME'));
   assert.ok(!noActions.includes('likes'));
 });
-test('footer keeps the timestamp and metrics in non-overlapping rows', () => {
+test('footer keeps time separate and aligns watermark with the final metrics row', () => {
   const doc = render();
   const footer = doc.querySelector('.card-footer');
   const time = doc.querySelector('.card-footer-time');
   const actions = doc.querySelector('.card-footer-actions');
+  const bottom = doc.querySelector('.card-footer-bottom');
+  const watermark = doc.querySelector('.card-footer-watermark');
   assert.equal(footer.style.display, 'flex');
   assert.equal(footer.style.flexDirection, 'column');
   assert.notEqual(footer.style.gap, '');
   assert.equal(time.style.whiteSpace, 'nowrap');
   assert.equal(actions.style.flexWrap, 'wrap');
   assert.notEqual(actions.style.gap, '');
+  assert.equal(bottom.style.display, 'flex');
+  assert.equal(bottom.style.alignItems, 'flex-end');
+  assert.equal(watermark.style.marginLeft, 'auto');
 });
 test('watermark supports persisted custom value and off state independently of footer', () => {
   assert.ok(render({ watermark: { enabled: true, text: 'CUSTOM' }, controls: {} }).body.textContent.includes('CUSTOM'));
   assert.ok(!render({ watermark: { enabled: false, text: 'CUSTOM' } }).body.textContent.includes('CUSTOM'));
+  const footerOff = render({ watermark: { enabled: true, text: 'CUSTOM' }, controls: { showFooter: false } });
+  assert.ok(footerOff.querySelector('.card-footer-watermark'));
+  assert.equal(footerOff.querySelector('.card-footer-time'), null);
+  assert.equal(footerOff.querySelector('.card-footer-actions'), null);
 });
 test('background opacity and blur map to CSS, not unused custom attributes', () => {
   const doc = render();

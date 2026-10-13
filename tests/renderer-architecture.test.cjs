@@ -11,7 +11,7 @@ test('extension exposes and selects the bundled renderer by default', () => {
   const overlay = read('src/contents/plasmo-overlay.tsx');
   const renderer = read('src/tabs/renderer.tsx');
 
-  assert.equal(pkg.version, '0.4.1');
+  assert.equal(pkg.version, '0.4.2');
   assert.ok(pkg.manifest.web_accessible_resources.some((entry) =>
     entry.matches.includes('https://x.com/*') && entry.resources.includes('tabs/renderer.html')));
   assert.match(overlay, /src=\{localRendererURL\}/);
@@ -31,4 +31,13 @@ test('renderer fallback preserves settings and old cloud settings can migrate on
   assert.match(sender, /renderer-ping/);
   assert.match(receiver, /event\.origin !== 'https:\/\/x\.com'/);
   assert.match(receiver, /location\.protocol === 'chrome-extension:'/);
+});
+
+test('toolbar opens the website while X opens local settings', () => {
+  const background = read('src/background/index.ts');
+  const toast = read('src/components/extension/x-cards-toast/index.tsx');
+
+  assert.match(background, /chrome\.tabs\.create\(\{ url: CLOUD_SITE_URL \}\)/);
+  assert.doesNotMatch(background, /getLocalRendererUrl/);
+  assert.match(toast, /settingsPanelUrl = getLocalRendererUrl\(\)/);
 });
