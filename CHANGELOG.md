@@ -2,6 +2,11 @@
 
 本文件记录 M.Card(x-cards 自托管分支)的版本变更。扩展版本号跟随 `package.json` 的 `version` 字段(Plasmo 构建时会写入扩展 manifest)。
 
+## v0.4.1 (2026-10-13)
+
+- 修复真实 Chrome 中旧图片 `onError` 晚到时覆盖新预览的问题：失败状态绑定到具体图片源，新图成功加载后不会残留 `Failed to load image`。
+- 增加图片加载竞态回归约束；本地优先与云端回退架构保持不变。
+
 ## v0.4.0 (2026-10-13)
 
 - 生图渲染器改为扩展内置 `tabs/renderer.html`，正常使用不再依赖 Cloudflare 网络往返。

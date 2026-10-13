@@ -48,3 +48,10 @@ test('image and data export formats render the matching preview mode', () => {
   assert.equal(dataExport.querySelector('img'), null);
   assert.match(dataExport.body.textContent, /JSON is a data export/);
 });
+
+test('a stale image error is scoped to the source that actually failed', () => {
+  const componentSource = fs.readFileSync('src/components/extension/x-cards-toast/image-preview.tsx', 'utf8');
+  assert.match(componentSource, /failedSrc === imageSrc/);
+  assert.match(componentSource, /failedImage\.naturalWidth === 0/);
+  assert.match(componentSource, /current === loadedSrc \? null : current/);
+});

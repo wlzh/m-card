@@ -10,7 +10,7 @@ interface ImagePreviewProps {
 const IMAGE_FORMATS = new Set(['png', 'jpeg', 'svg']);
 
 const ImagePreview = ({ alt = "Preview", format = 'png' }: ImagePreviewProps) => {
-  const [error, setError] = useState(null);
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
@@ -22,14 +22,13 @@ const ImagePreview = ({ alt = "Preview", format = 'png' }: ImagePreviewProps) =>
   const isImageFormat = IMAGE_FORMATS.has(normalizedFormat);
 
   useEffect(() => {
-    // A new preview must not inherit a failure from the previous data URL.
-    setError(null);
     setScale(1);
     setPosition({ x: 0, y: 0 });
   }, [imageSrc, normalizedFormat]);
 
-  const handleImageLoad = useCallback(() => {
-    setError(null);
+  const handleImageLoad = useCallback((event: React.SyntheticEvent<HTMLImageElement>) => {
+    const loadedSrc = event.currentTarget.getAttribute('src');
+    setFailedSrc(current => current === loadedSrc ? null : current);
     if (imageRef.current) {
       setImageDimensions({
         width: imageRef.current.naturalWidth,
@@ -38,9 +37,11 @@ const ImagePreview = ({ alt = "Preview", format = 'png' }: ImagePreviewProps) =>
     }
   }, []);
 
-  const handleImageError = useCallback(() => {
-    if (imageSrc) setError('Failed to load image');
-  }, [imageSrc]);
+  const handleImageError = useCallback((event: React.SyntheticEvent<HTMLImageElement>) => {
+    const failedImage = event.currentTarget;
+    const src = failedImage.getAttribute('src');
+    if (src && failedImage.naturalWidth === 0) setFailedSrc(src);
+  }, []);
 
   const handleZoomIn = useCallback(() => {
     setScale(prevScale => Math.min(prevScale + 0.1, 3));
@@ -86,9 +87,9 @@ const ImagePreview = ({ alt = "Preview", format = 'png' }: ImagePreviewProps) =>
 
   return (
     <div className="relative w-full  h-full rounded-lg overflow-hidden  object-cover" ref={containerRef}>
-      {error && imageSrc && isImageFormat && (
+      {failedSrc === imageSrc && imageSrc && isImageFormat && (
         <div className="absolute inset-0 flex items-center justify-center text-red-500">
-          {error}
+          Failed to load image
         </div>
       )}
       <div
