@@ -155,7 +155,7 @@ export const sendMessageToIframe = async (name: string, data: any, timeout: numb
     }
     iframe.dataset.rendererMode = 'cloud';
     await new Promise<void>((resolve, reject) => {
-      const timer = setTimeout(() => reject(new Error('Cloud renderer load timeout')), 8000);
+      const timer = setTimeout(() => reject(new Error('Cloud renderer load timeout')), 20000);
       iframe.addEventListener('load', () => {
         clearTimeout(timer);
         resolve();

@@ -25,7 +25,9 @@ const Index = () => {
     useEffect(() => {
         let queue = Promise.resolve();
         const fn = async (event: MessageEvent) => {
-            if (event.origin !== 'https://x.com' || event.source !== window.parent) return;
+            // Chrome isolated worlds may expose different WindowProxy wrappers for the
+            // same parent. Origin + per-request UUID are the stable trust boundary.
+            if (event.origin !== 'https://x.com' || !event.source) return;
 
             if (event.data?.action === 'renderer-ping') {
                 (event.source as Window)?.postMessage({

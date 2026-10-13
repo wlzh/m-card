@@ -13,7 +13,6 @@ interface MessageEvent {
 class IFrameMessageSystem {
   private subscribers: Map<string, Set<MessageCallback>>;
   private trustedOrigins = new Set<string>();
-  private trustedSources = new Set<MessageEventSource>();
 
   constructor() {
     this.subscribers = new Map();
@@ -57,10 +56,7 @@ class IFrameMessageSystem {
       const unsubscribe = this.subscribe(responseAction, responseHandler);
 
       const targetOrigin = new URL(iframe.src).origin;
-      if (iframe.contentWindow) {
-        this.trustedOrigins.add(targetOrigin);
-        this.trustedSources.add(iframe.contentWindow);
-      }
+      this.trustedOrigins.add(targetOrigin);
       iframe.contentWindow?.postMessage({
         action,
         requestId,
@@ -70,7 +66,7 @@ class IFrameMessageSystem {
   }
 
   private handleMessage(event: MessageEvent): void {
-    if (!event.source || !this.trustedSources.has(event.source) || !this.trustedOrigins.has(event.origin)) {
+    if (!event.source || !this.trustedOrigins.has(event.origin)) {
       return;
     }
     const { action, value, requestId } = event.data;

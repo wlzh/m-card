@@ -11,7 +11,7 @@ test('extension exposes and selects the bundled renderer by default', () => {
   const overlay = read('src/contents/plasmo-overlay.tsx');
   const renderer = read('src/tabs/renderer.tsx');
 
-  assert.equal(pkg.version, '0.4.3');
+  assert.equal(pkg.version, '0.4.4');
   assert.ok(pkg.manifest.web_accessible_resources.some((entry) =>
     entry.matches.includes('https://x.com/*') && entry.resources.includes('tabs/renderer.html')));
   assert.match(overlay, /src=\{localRendererURL\}/);
@@ -22,6 +22,7 @@ test('extension exposes and selects the bundled renderer by default', () => {
 test('renderer fallback preserves settings and old cloud settings can migrate once', () => {
   const overlay = read('src/contents/plasmo-overlay.tsx');
   const sender = read('src/app/utils/index.ts');
+  const messaging = read('src/app/utils/IFrameMessageSystem.ts');
   const receiver = read('src/app/(extension)/independent/components/index.tsx');
 
   assert.match(overlay, /mcard-cloud-settings-migrated-v1/);
@@ -30,6 +31,8 @@ test('renderer fallback preserves settings and old cloud settings can migrate on
   assert.match(sender, /switchToCloud/);
   assert.match(sender, /renderer-ping/);
   assert.match(receiver, /event\.origin !== 'https:\/\/x\.com'/);
+  assert.doesNotMatch(receiver, /event\.source !== window\.parent/);
+  assert.doesNotMatch(messaging, /trustedSources/);
   assert.match(receiver, /location\.protocol === 'chrome-extension:'/);
 });
 
