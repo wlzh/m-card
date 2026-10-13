@@ -1,8 +1,15 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { ZoomIn, ZoomOut, Move, RotateCcw } from 'lucide-react';
+import { ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 import { useTweetsStore } from '../use-tweet-collection';
 
-const ImagePreview = ({ alt = "Preview" }) => {
+interface ImagePreviewProps {
+  alt?: string;
+  format?: string;
+}
+
+const IMAGE_FORMATS = new Set(['png', 'jpeg', 'svg']);
+
+const ImagePreview = ({ alt = "Preview", format = 'png' }: ImagePreviewProps) => {
   const [error, setError] = useState(null);
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -10,10 +17,19 @@ const ImagePreview = ({ alt = "Preview" }) => {
   const [imageDimensions, setImageDimensions] = useState({ width: 0, height: 0 });
   const containerRef = useRef(null);
   const imageRef = useRef(null);
-  const format = useTweetsStore(state => state.cardConfig.format);
   const imageSrc = useTweetsStore(state => state.imageSrc);
+  const normalizedFormat = format.toLowerCase();
+  const isImageFormat = IMAGE_FORMATS.has(normalizedFormat);
+
+  useEffect(() => {
+    // A new preview must not inherit a failure from the previous data URL.
+    setError(null);
+    setScale(1);
+    setPosition({ x: 0, y: 0 });
+  }, [imageSrc, normalizedFormat]);
 
   const handleImageLoad = useCallback(() => {
+    setError(null);
     if (imageRef.current) {
       setImageDimensions({
         width: imageRef.current.naturalWidth,
@@ -23,8 +39,8 @@ const ImagePreview = ({ alt = "Preview" }) => {
   }, []);
 
   const handleImageError = useCallback(() => {
-    setError('Failed to load image');
-  }, []);
+    if (imageSrc) setError('Failed to load image');
+  }, [imageSrc]);
 
   const handleZoomIn = useCallback(() => {
     setScale(prevScale => Math.min(prevScale + 0.1, 3));
@@ -70,7 +86,7 @@ const ImagePreview = ({ alt = "Preview" }) => {
 
   return (
     <div className="relative w-full  h-full rounded-lg overflow-hidden  object-cover" ref={containerRef}>
-      {error && (
+      {error && imageSrc && isImageFormat && (
         <div className="absolute inset-0 flex items-center justify-center text-red-500">
           {error}
         </div>
@@ -83,7 +99,7 @@ const ImagePreview = ({ alt = "Preview" }) => {
         onMouseLeave={handleMouseUp}
       >
         {
-          format === 'md' && (
+          !isImageFormat && (
             <div className="w-full flex-col gap-y-2  h-full p-4 justify-center flex  items-center rounded-lg shadow">
               <svg
                 className="icon"
@@ -97,12 +113,14 @@ const ImagePreview = ({ alt = "Preview" }) => {
                   fill="#323847"
                 />
               </svg>
-              Copy the markdown and paste to see the preview
+              {normalizedFormat === 'md'
+                ? 'Copy the Markdown and paste it to preview'
+                : `${normalizedFormat.toUpperCase()} is a data export and has no image preview`}
             </div>
           )
         }
         {
-          format !== 'md' && (
+          isImageFormat && imageSrc && (
             <img
               ref={imageRef}
               src={imageSrc}
@@ -118,9 +136,14 @@ const ImagePreview = ({ alt = "Preview" }) => {
             />
           )
         }
+        {isImageFormat && !imageSrc && (
+          <div className="w-full h-full flex items-center justify-center text-neutral-400">
+            Generating preview…
+          </div>
+        )}
 
       </div>
-      <div className="  absolute  top-0 pt-4 pl-4  w-full  flex space-x-2">
+      {isImageFormat && imageSrc && <div className="absolute top-0 pt-4 pl-4 w-full flex space-x-2">
         <button onClick={handleZoomIn} className="p-2 bg-white rounded-full shadow-md">
           <ZoomIn className="w-5 h-5 text-gray-600" />
         </button>
@@ -130,7 +153,7 @@ const ImagePreview = ({ alt = "Preview" }) => {
         <button onClick={handleReset} className="p-2 bg-white rounded-full shadow-md">
           <RotateCcw className="w-5 h-5 text-gray-600" />
         </button>
-      </div>
+      </div>}
     </div>
   );
 };

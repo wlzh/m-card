@@ -47,6 +47,18 @@ test('footer sub-controls independently hide time and metrics', () => {
   assert.ok(noActions.includes('TEST_TIME'));
   assert.ok(!noActions.includes('likes'));
 });
+test('footer keeps the timestamp and metrics in non-overlapping rows', () => {
+  const doc = render();
+  const footer = doc.querySelector('.card-footer');
+  const time = doc.querySelector('.card-footer-time');
+  const actions = doc.querySelector('.card-footer-actions');
+  assert.equal(footer.style.display, 'flex');
+  assert.equal(footer.style.flexDirection, 'column');
+  assert.notEqual(footer.style.gap, '');
+  assert.equal(time.style.whiteSpace, 'nowrap');
+  assert.equal(actions.style.flexWrap, 'wrap');
+  assert.notEqual(actions.style.gap, '');
+});
 test('watermark supports persisted custom value and off state independently of footer', () => {
   assert.ok(render({ watermark: { enabled: true, text: 'CUSTOM' }, controls: {} }).body.textContent.includes('CUSTOM'));
   assert.ok(!render({ watermark: { enabled: false, text: 'CUSTOM' } }).body.textContent.includes('CUSTOM'));

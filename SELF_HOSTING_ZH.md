@@ -17,7 +17,7 @@
 pnpm install --frozen-lockfile
 NEXT_PUBLIC_SITE_URL=https://mcard.wlz.si pnpm build:next
 pnpm build:extension:prod
-pnpm package
+pnpm package:extension:prod
 ```
 
 产物：
@@ -74,7 +74,7 @@ curl --noproxy '*' -sS -L https://mcard.wlz.si/ | head -n 5
 1. 打开 `chrome://extensions` 并启用开发者模式。
 2. 点击“加载已解压的扩展程序”。
 3. 选择 `build/chrome-mv3-prod/`。
-4. 打开 `https://x.com` 验证单帖、连帖、图片、视频封面、复制和六种下载格式。
+4. 打开 `https://x.com` 验证普通帖、文章时间线摘要、文章详情全文、连帖、图片、视频封面、复制和六种下载格式。
 
 ## 当前边界
 

@@ -271,22 +271,19 @@ const CardBody: React.FC<{
 const CardFooter = ({ xConfig, controls }) => {
     const time = _.isArray(xConfig) ? _.last(xConfig).time : xConfig.time;
     return (
-        <div>
-            {controls.showTime && Number.isFinite(time) && <div className="text-secondary-foreground flex items-center " style={{ paddingBottom: "0.5em", paddingTop: '0.5rem' }}>
+        <div className="card-footer" style={{ display: 'flex', flexDirection: 'column', gap: '0.55em', paddingTop: '0.75em', lineHeight: 1.35 }}>
+            {controls.showTime && Number.isFinite(time) && <div className="card-footer-time text-secondary-foreground" style={{ whiteSpace: 'nowrap' }}>
                 <span>{formatTimestamp(time)}</span>
-
             </div>}
-            {controls.showActions && <div className='flex  items-center justify-between'>
-                <div className="flex">
+            {controls.showActions && <div className="card-footer-actions text-secondary-foreground" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.35em 1em' }}>
                     {['replies', 'shares', 'likes'].map((stat) => (
-                        <div key={stat} className="whitespace-nowrap text-secondary-foreground" style={{ marginRight: "1em" }}>
+                        <div key={stat} className="whitespace-nowrap">
                             <span className="font-medium" style={{ color: "var(--textPrimary)" }}>
-                                {xConfig[stat]}
+                                {xConfig[stat] ?? 0}
                             </span>{" "}
                             {stat}
                         </div>
                     ))}
-                </div>
             </div>}
         </div>
     );

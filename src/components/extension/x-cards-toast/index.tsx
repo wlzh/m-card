@@ -57,6 +57,7 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
         : '';
     const activeWidthKey = selectedWidth ?? defaultWidthKey;
     const activeFormat = selectedFormat ?? uiDefaults.format ?? 'png';
+    const generationSessionKey = tweetInfo.url || String(tweetInfo.time || tweetInfo.text || 'tweet');
 
     const styles = {
         container: {
@@ -297,7 +298,7 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
                     transition={{ duration: 0.3 }}
                     className="w-full h-full"
                 >
-                    <ImagePreview />
+                    <ImagePreview format={activeFormat} />
                 </motion.div>
                 {isLoading && (
                     <div style={styles.loader}>
@@ -308,7 +309,7 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
             </motion.div>
 
         )
-    }, [isLoading, tweetInfo, tweetInfos, tweets, isPreview,
+    }, [isLoading, tweetInfo, tweetInfos, tweets, isPreview, activeFormat,
         cardConfig.padding,
         cardConfig.width,
         cardConfig.colorIndex,
@@ -330,7 +331,7 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
         </div>
 
         {renderTweetManager}
-        <PresetColorList onSelect={handleColorChange} />
+        <PresetColorList key={`color-${generationSessionKey}`} onSelect={handleColorChange} />
         <div>
             <h3 className="text-sm font-semibold mb-2">WIDTH</h3>
             <div
@@ -349,8 +350,9 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
             </div>
 
         </div>
-        <PaddingControl></PaddingControl>
+        <PaddingControl key={`padding-${generationSessionKey}`}></PaddingControl>
         <TweetControl
+            key={`controls-${generationSessionKey}`}
             onChange={(controls) => {
                 setCardConfig({ controls, });
             }}
@@ -376,7 +378,7 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
             </div>
         </div>
 
-        <FontControl></FontControl>
+        <FontControl key={`font-${generationSessionKey}`}></FontControl>
 
         <ScaleControl value={cardConfig.scale ?? uiDefaults.scale ?? 2} onChange={v => {
             setCardConfig({
@@ -455,6 +457,9 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
         if (stale && Object.keys(stale).length > 0) {
             useTweetsStore.setState({ cardConfig: {} });
         }
+        setSelectedFormat(null);
+        setSelectWidth(null);
+        setImageSrc('');
         // 拉取本机默认值，按钮高亮与配置面板保存的默认值一致
         let cancelled = false;
         sendMessageToIframe('get-card-defaults', {}, 3000)

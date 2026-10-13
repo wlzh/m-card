@@ -1,177 +1,51 @@
-<a name="readme-top"></a>
+# M.Card
 
-<div align="center">
-<img src="assets/icon.png" width="32" >
-<h1>M.Card</h1>
+[English](README.md) | [中文](README_ZH.md) | [Website](https://mcard.wlz.si) | [Changelog](CHANGELOG.md)
 
-[English](README.md) | [中文](README_ZH.md)
+M.Card is a self-hosted Chrome extension for turning X posts, threads, and X Articles into shareable cards or portable data exports. It is based on the MPL-2.0 licensed [x-cards](https://github.com/hzeyuan/x-cards) project.
 
-Self-hosting and Cloudflare Pages instructions: [SELF_HOSTING_ZH.md](./SELF_HOSTING_ZH.md). Full source audit: [PROJECT_AUDIT_ZH.md](./PROJECT_AUDIT_ZH.md).
+## Features
 
-[![x-cards intro](https://img.youtube.com/vi/v8iQV8ZoVBk/0.jpg)](https://youtu.be/okCIZrFrTCE)
+- Generate cards directly from the X action bar, with a live preview before copy or download.
+- Capture ordinary posts, thread items, video posters, article previews, and full X Articles.
+- Preserve headings, paragraphs, lists, quotes, dividers, and inline image order on article detail pages.
+- Export PNG, JPEG, SVG, Markdown, JSON, or an asset ZIP.
+- Configure width, padding, font size and family, image layout, background, border, visible fields, watermark, format, and 1x-4x export scale.
+- Persist every default locally in IndexedDB. Toast controls are temporary overrides for the current generation session.
+- Enable or disable a customizable watermark, enabled as `@wlzh` by default.
 
-Self-hosted X post cards and portable data exports.
-
-[![][vercel-shield]][vercel-link]
-
-[![][share-x-shield]][share-x-link]
-[![][share-whatsapp-shield]][share-whatsapp-link]
-[![][share-reddit-shield]][share-reddit-link]
-[![][share-weibo-shield]][share-weibo-link]
-
-[![][share-linkedin-shield]][share-linkedin-link]
-
-[github-issues-link]: https://github.com/wlzh/m-card/issues
-[github-contributors-shield]: https://img.shields.io/github/contributors/hzeyuan/OpenGPTS?color=c4f042&labelColor=black&style=flat-square
-[github-contributors-link]: https://github.com/hzeyuan/OpenGPTS/graphs/contributors
-[vercel-link]: https://mcard.wlz.si
-[vercel-shield]: https://img.shields.io/website?down_message=offline&label=website&labelColor=black&style=flat-square&up_message=online&url=https://mcard.wlz.si
-[share-linkedin-link]: https://linkedin.com/feed
-[share-linkedin-shield]: https://img.shields.io/badge/-share%20on%20linkedin-black?labelColor=black&logo=linkedin&logoColor=white&style=flat-square
-[share-reddit-link]: https://www.reddit.com/submit?title=M.Card&url=https://github.com/wlzh/m-card
-[share-reddit-shield]: https://img.shields.io/badge/-share%20on%20reddit-black?labelColor=black&logo=reddit&logoColor=white&style=flat-square
-[share-telegram-link]: https://t.me/share/url?text=M.Card&url=https://github.com/wlzh/m-card
-[share-telegram-shield]: https://img.shields.io/badge/-share%20on%20telegram-black?labelColor=black&logo=telegram&logoColor=white&style=flat-square
-[share-weibo-link]: http://service.weibo.com/share/share.php?sharesource=weibo&title=M.Card
-[share-weibo-shield]: https://img.shields.io/badge/-share%20on%20weibo-black?labelColor=black&logo=sinaweibo&logoColor=white&style=flat-square
-[share-whatsapp-link]: https://api.whatsapp.com/send?text=M.Card
-[share-whatsapp-shield]: https://img.shields.io/badge/-share%20on%20whatsapp-black?labelColor=black&logo=whatsapp&logoColor=white&style=flat-square
-[share-x-link]: https://x.com/intent/tweet?url=https://github.com/wlzh/m-card
-[share-x-shield]: https://img.shields.io/badge/-share%20on%20x-black?labelColor=black&logo=x&logoColor=white&style=flat-square
-
-</div>
-
-⚡ **M.Card** exports X posts as images, Markdown, JSON, and portable asset bundles.
-
-## Project Background
-
-X is a source of information for many platforms，So this project came into being
-
-## Changelog
-
-<details>
-<summary><strong>v0.2.0</strong></summary>
-
-* Watermark: toggle it and customize the watermark text in the panel (defaults to `@wlzh`, on by default); exports include it.
-* Persistent settings: every panel value (width, padding, background, watermark, etc.) is remembered locally — no more re-configuring after a refresh.
-* Save as Default / Load Default buttons to snapshot and restore your personal defaults; Reset restores factory defaults.
-* Performance: debounced persistence writes, so dragging sliders no longer writes to storage on every tick.
-
-</details>
-
-<details>
-<summary><strong>v0.1.0</strong></summary>
-
-* Self-hosted build rebranded as M.Card, deployable to Cloudflare Pages with a custom domain (mcard.wlz.si).
-* Updated community links (X / Discord).
-
-</details>
-
-<details>
-<summary><strong>v0.0.3</strong></summary>
-
-* Performance Optimization: Utilized web workers for image generation, addressing issues with blank spaces on X.com after scrolling down.
-* Enhanced Padding Settings: Added the ability to adjust padding within the card for better layout control.
-* Image Quality Settings: Introduced options to set the quality of generated images for export.
-* Markdown Export: Now supports exporting content in Markdown format for easy integration into documentation or blogs.
-* Font Size Adjustment: Added support for modifying font sizes to improve readability and customization.
-* Interaction Optimization: After installing the plugin or clicking the icon, redirect to the welcome page.
-
-![Download Extension](./assets/v0.02-demo.jpg)
-
-</details>
-
-<details>
-<summary><strong>v0.0.2</strong></summary>
-
-- Added real-time preview feature, now a toast in the upper right corner allows you to observe the generated card.
-
-- Introduced customization for card background color.
-
-- Customizable card width.
-
-- Improved: Now clicking defaults to copying the image, rather than downloading the image.
-
-- Fixed the issue of unable to fetch cover image for videos.
-
-- Added support for fetching continuous posts.
-
-- Enabled dynamic addition, deletion, dragging, and management of posts.
-
-![Download Extension](./assets/v0.02-demo.jpg)
-
-</details>
-
-<details>
-<summary><strong>v0.0.1</strong></summary>
-
-- Easy to access, just a simple click away.
-- Obtain videos, images, text, likes。
-- Export in multiple formats, including JSON, Markdown, PNG, JPEG, and SVG.
-
-</details>
-
-## features
-
-- Added real-time preview feature, now a toast in the upper right corner allows you to observe the generated card.
-
-- Introduced customization for card background color.
-
-- Customizable card width.
-
-- Watermark support: on by default with customizable text, remembered locally.
-
-- All panel settings persist locally, with personal defaults you can save and restore.
-
-- The x.com generation panel opens pre-loaded with your defaults; in-panel tweaks apply to that export only.
-
-- Improved: Now clicking defaults to copying the image, rather than downloading the image.
-
-- Fixed the issue of unable to fetch cover image for videos.
-
-- Added support for fetching continuous posts.
-
-- Enabled dynamic addition, deletion, dragging, and management of posts.
-
-<br/>
-
-## How to Use
-
-### [chrome web Store](https://chromewebstore.google.com/detail/x-card/mbinooofmcjhjklihfejnkkebffceeop)
-
-## or
-
-1. Download Extension
-
-![Download Extension](./assets/install_guide/1.download.png)
-
-2. url input:chrome://extensions/ in your chrome browser, and open the developer mode
-
-3. unzip and Drag the extension file to the page
-
-![Drag the extension file to the page](./assets/install_guide/2.install.png)
-
-4. open x.com and browse the post, you will find your card button in the bottom right corner
-
-## Development Guide
-
-1. The project uses the Plasmo framework for rapid Chrome extension development.
-2. Uses Next.js for frontend development.
-3. Tailwind CSS and Shadcn as CSS frameworks.
-4. Langchain for developing agents.
-5. Deployed on Vercel.
-
-Local development:
+## Install The Extension
 
 ```bash
-pnpm install
-
-# Run frontend
-npm run dev:next
-# Run plugin
-npm run dev:plasmo
+pnpm install --frozen-lockfile
+pnpm build:extension:prod
 ```
 
-## Starchart
+Open `chrome://extensions`, enable Developer mode, choose **Load unpacked**, and select:
 
-[![Star History Chart](https://api.star-history.com/svg?repos=hzeyuan/x-cards&type=Date)](https://star-history.com/#hzeyuan/x-cards&Date)
+```text
+build/chrome-mv3-prod/
+```
+
+The extension renderer is compiled to use `https://mcard.wlz.si/independent`. Rebuild it after changing `PLASMO_PUBLIC_RENDERER_URL`.
+
+## Development
+
+Requires Node.js 20 and pnpm 9.15.4.
+
+```bash
+pnpm install --frozen-lockfile
+pnpm dev:next
+pnpm dev:plasmo
+pnpm test
+pnpm build:next
+pnpm build:extension:prod
+```
+
+The Next.js application is a static export deployed on Cloudflare Pages; no VPS is required. See [SELF_HOSTING_ZH.md](SELF_HOSTING_ZH.md) for deployment and credential handling, [ARTICLE_SETTINGS_AUDIT_ZH.md](ARTICLE_SETTINGS_AUDIT_ZH.md) for the settings contract, and [PROJECT_AUDIT_ZH.md](PROJECT_AUDIT_ZH.md) for implementation boundaries.
+
+## License
+
+MPL-2.0. Keep the license and upstream notices when redistributing modified MPL-covered files. See [LICENSE](LICENSE).
+
+Community: [X](https://x.com/wlzh) | [Discord](https://discord.com/invite/cj9fusHpjQ)
