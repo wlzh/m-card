@@ -55,3 +55,11 @@ test('a stale image error is scoped to the source that actually failed', () => {
   assert.match(componentSource, /failedImage\.naturalWidth === 0/);
   assert.match(componentSource, /current === loadedSrc \? null : current/);
 });
+
+test('initial generation completion is settled on success, failure, or toast unmount', () => {
+  const toastSource = fs.readFileSync('src/components/extension/x-cards-toast/index.tsx', 'utf8');
+
+  assert.match(toastSource, /const finishInitialGeneration/);
+  assert.match(toastSource, /finally \{[\s\S]*finishInitialGeneration\(\)/);
+  assert.match(toastSource, /return \(\) => finishInitialGeneration\(\)/);
+});

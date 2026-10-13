@@ -50,7 +50,15 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
     // 与隐藏渲染 iframe 同源，共享本机 IndexedDB —— 改完即存，生成即刻生效
     const [showSettings, setShowSettings] = useState(false);
     const initialGenerationPending = useRef(true);
+    const initialGenerationEndRef = useRef(onInitialGenerationEnd);
+    initialGenerationEndRef.current = onInitialGenerationEnd;
     const settingsPanelUrl = getLocalRendererUrl();
+
+    const finishInitialGeneration = () => {
+        if (!initialGenerationPending.current) return;
+        initialGenerationPending.current = false;
+        initialGenerationEndRef.current?.();
+    };
 
     // 默认宽度反查档位（sm/md/lg/xl）；面板自定义宽度不在档位内则不高亮
     const defaultWidthKey = uiDefaults.width != null
@@ -232,10 +240,7 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
             toast.error(error instanceof Error ? error.message : 'Card generation failed');
         } finally {
             setIsLoading(false);
-            if (initialGenerationPending.current) {
-                initialGenerationPending.current = false;
-                onInitialGenerationEnd?.();
-            }
+            finishInitialGeneration();
         }
     }
 
@@ -450,6 +455,10 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
         </span>}
     </div >
 
+
+    useEffect(() => {
+        return () => finishInitialGeneration();
+    }, []);
 
     useEffect(() => {
         // 新生成会话（点开另一条推特的生成按钮 / 重新打开发图面板）：

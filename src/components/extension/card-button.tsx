@@ -1,5 +1,5 @@
 import { DynamicStyleTippyComponent } from "@src/app/(app)/components/dynamic-style-tippy";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { extractTweetInfo, getPostThreadAsync } from "@src/app/utils";
 import toast from 'react-hot-toast';
 import { PreviewToast } from "./x-cards-toast";
@@ -33,6 +33,12 @@ export const CardButton: React.FC<{
 }> = ({ anchor }) => {
     const [isLoading, setIsLoading] = useState(false);
     const isLoadingRef = useRef(false);
+    const generationWatcherCleanupRef = useRef<(() => void) | null>(null);
+
+    const clearGenerationWatcher = () => {
+        generationWatcherCleanupRef.current?.();
+        generationWatcherCleanupRef.current = null;
+    }
 
     const beginLoading = async () => {
         if (isLoadingRef.current) return false;
@@ -43,9 +49,24 @@ export const CardButton: React.FC<{
     }
 
     const endLoading = () => {
+        clearGenerationWatcher();
         isLoadingRef.current = false;
         setIsLoading(false);
     }
+
+    const watchForGeneratedPreview = () => {
+        clearGenerationWatcher();
+        const unsubscribe = useTweetsStore.subscribe((state) => {
+            if (state.imageSrc) endLoading();
+        });
+        const timeout = window.setTimeout(endLoading, 65000);
+        generationWatcherCleanupRef.current = () => {
+            unsubscribe();
+            window.clearTimeout(timeout);
+        };
+    }
+
+    useEffect(() => () => clearGenerationWatcher(), []);
 
     const handlePreview = async (e) => {
         e.stopPropagation();
@@ -63,6 +84,7 @@ export const CardButton: React.FC<{
                 state.imageSrc = '';
                 return state;
             });
+            watchForGeneratedPreview();
             toast.remove('preview-toast');
             toast.custom((t) => {
                 return (<PreviewToast

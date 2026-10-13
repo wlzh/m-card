@@ -29,6 +29,14 @@ test('card button uses a synchronous ref guard and clears it after generation', 
   assert.match(source, /onInitialGenerationEnd=\{endLoading\}/);
 });
 
+test('card button also stops from the generated preview store signal', () => {
+  assert.match(source, /useTweetsStore\.subscribe/);
+  assert.match(source, /if \(state\.imageSrc\) endLoading\(\)/);
+  assert.match(source, /watchForGeneratedPreview\(\)/);
+  assert.match(source, /window\.setTimeout\(endLoading, 65000\)/);
+  assert.match(source, /clearGenerationWatcher\(\)/);
+});
+
 test('card extraction yields between DOM phases and reuses the selected post result', () => {
   assert.match(source, /await getPostThreadAsync\(postElement\)/);
   assert.match(source, /element === postElement \? tweetInfo : extractTweetInfo\(element\)/);
