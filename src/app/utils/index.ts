@@ -4,6 +4,7 @@ import { extractPostContent } from './article';
 import { domToPng, domToJpeg, domToSvg, type Options, createContext, destroyContext } from 'modern-screenshot'
 import type { XConfig } from '@src/hooks/useCardStore';
 import type { CardConfig } from '@src/components/extension/use-tweet-collection';
+import { extractEngagementStats } from './engagement';
 import { iframeMessageSystem } from './IFrameMessageSystem';
 import { getAdjacentCellDiv, traverseAndCheck, traverseAndCheckAsync } from './element';
 
@@ -319,11 +320,8 @@ export function extractTweetInfo(postElement: Element | null) {
     src: link.querySelector('img')?.src === tweet.avatar ? undefined : link.querySelector('img')?.src.replace(/name=\w+/, 'name=large')
   }));
 
-  // 提取统计信息
-  const stats = postElement.querySelector('[role="group"]');
-  tweet.replies = stats?.querySelector('[data-testid="reply"]')?.textContent || 0;
-  tweet.shares = stats?.querySelector('[data-testid="retweet"]')?.textContent || 0;
-  tweet.likes = stats?.querySelector('[data-testid="like"]')?.textContent || 0;
+  // X switches like/retweet test IDs after the current account activates them.
+  Object.assign(tweet, extractEngagementStats(postElement));
   // tweet.views = stats.querySelector('a[href$="/analytics"]').textContent;
 
   return tweet;
