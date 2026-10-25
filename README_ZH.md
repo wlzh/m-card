@@ -10,6 +10,7 @@ M.Card 是一个自托管 Chrome 扩展，可把 X 普通帖子、连帖和 X Ar
 - 采集普通推文、连帖、视频封面、文章时间线摘要和文章详情全文。
 - 文章详情页按原 DOM 顺序保留标题、段落、列表、引用、分隔线、语义化表格、代码块和穿插图片。X 特殊嵌入组件仍有兼容边界。
 - 支持 PNG、JPEG、SVG、Markdown、JSON 和素材 ZIP 导出。
+- macOS 可选安装本机助手，在生图面板把 PNG/JPEG 一键导入「照片」的 `M.Card` 相簿；详见 [PHOTOS_HELPER_ZH.md](PHOTOS_HELPER_ZH.md)。
 - 可设置宽度、Padding、字号、字体、图片布局、背景、边框、显示字段、水印、格式和 1x-4x 导出倍率。
 - 默认在扩展内部本地渲染，`mcard.wlz.si` 只作为本地渲染不可用时的自动备选。
 - 所有默认设置保存在扩展自身的本机 IndexedDB；生图面板的快捷调整只覆盖当前生成会话。
@@ -33,6 +34,8 @@ build/chrome-mv3-prod/
 
 生产扩展内置 `tabs/renderer.html` 并优先本地渲染。`PLASMO_PUBLIC_RENDERER_URL` 只配置云端备选地址；修改后必须重新构建并重新加载扩展。
 重新加载扩展后，还要刷新已打开的 X 标签页；在 `build/chrome-mv3-prod/manifest.json` 核对版本与 `package.json` 一致。`pnpm package:extension:prod` 会先重建再打 ZIP，不能只拿旧 ZIP 重新加载。
+
+如需使用「Save to Mac Photos」，按 [本机助手安装说明](PHOTOS_HELPER_ZH.md) 安装一次；只需下载/复制图片时不需要本机助手。
 
 ## 设置关系
 

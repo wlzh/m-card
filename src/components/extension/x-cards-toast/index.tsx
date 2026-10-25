@@ -1,7 +1,7 @@
 import * as _ from 'lodash-es';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { PresetColorList } from '../preset-color-list';
-import { Copy, Download, Loader2, Settings, X } from 'lucide-react';
+import { Copy, Download, ImagePlus, Loader2, Settings, X } from 'lucide-react';
 import { sendMessageToIframe } from '@src/app/utils';
 import { CardWidths, type XConfig } from '@src/hooks/useCardStore';
 
@@ -20,6 +20,7 @@ import ScaleControl from './scale-control';
 import WatermarkControl from './watermark-control';
 import FontControl from './font-control';
 import { getLocalRendererUrl } from '@src/config/renderer';
+import { importImageToPhotos } from '@src/native/photos';
 
 
 interface PreviewToastProps {
@@ -31,6 +32,7 @@ interface PreviewToastProps {
 
 export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfos, anchor, onInitialGenerationEnd }) => {
     const [isLoading, setIsLoading] = useState(false);
+    const [isSavingPhotos, setIsSavingPhotos] = useState(false);
     const showCodeDialog = false;
     const setShowCodeDialog = (_value: boolean) => undefined;
     const srcRef = useRef<string>();
@@ -230,6 +232,23 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
         link.click();
     }
 
+    const handleSaveToPhotos = async () => {
+        if (isSavingPhotos || !['png', 'jpeg'].includes(activeFormat)) return;
+        setIsSavingPhotos(true);
+        try {
+            const data = await sendMessageToIframe('generate-card-local', {
+                tweetInfo: tweets,
+                cardConfig: { ...cardConfig, format: activeFormat },
+            }, 60000);
+            const message = await importImageToPhotos(data.dataUrl);
+            toast.success(message, { duration: 4000 });
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'Could not save to Photos', { duration: 7000 });
+        } finally {
+            setIsSavingPhotos(false);
+        }
+    };
+
     const handlePreview = async (tweetInfo: XConfig, tweetInfos: XConfig[] = []) => {
         let finalTweetInfo = [tweetInfo];
         const cardConfig = useTweetsStore.getState().cardConfig;
@@ -428,6 +447,15 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
         <button style={styles.button} onClick={handleDownloadImage}>
             <Download className=' h-4 w-4 mr-2' />
             Download
+        </button>
+        <button
+            style={{ ...styles.button, opacity: !['png', 'jpeg'].includes(activeFormat) || isSavingPhotos ? 0.5 : 1 }}
+            onClick={handleSaveToPhotos}
+            disabled={!['png', 'jpeg'].includes(activeFormat) || isSavingPhotos}
+            title="Requires the local M.Card Photos helper; PNG and JPEG only"
+        >
+            {isSavingPhotos ? <Loader2 className='h-4 w-4 mr-2 animate-spin' /> : <ImagePlus className='h-4 w-4 mr-2' />}
+            {isSavingPhotos ? 'Saving to Photos...' : 'Save to Mac Photos'}
         </button>
         <button
             className='mb-[32px]'

@@ -1,7 +1,7 @@
 {
   "name": "m-card",
   "displayName": "M.Card",
-  "version": "0.4.16",
+  "version": "0.4.17",
   "description": "Self-hosted Chrome extension for exporting X posts as cards and portable data.",
   "packageManager": "pnpm@9.15.4",
   "keywords": [
@@ -23,6 +23,7 @@
     "build:next": "next build",
     "package": "plasmo package",
     "package:extension:prod": "pnpm build:extension:prod && PLASMO_PUBLIC_RENDERER_URL=https://mcard.wlz.si/independent plasmo package && node scripts/verify-extension-renderer.mjs",
+    "install:photos-helper": "bash scripts/install-photos-helper.sh",
     "deploy:pages": "wrangler pages deploy out",
     "deploy:pages:local": "sh -c 'set -a && . ./.env.local && set +a && wrangler pages deploy out'"
   },
@@ -114,7 +115,8 @@
   "manifest": {
     "permissions": [
       "storage",
-      "tabs"
+      "tabs",
+      "nativeMessaging"
     ],
     "host_permissions": [
       "https://pbs.twimg.com/*",

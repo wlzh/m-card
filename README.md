@@ -10,6 +10,7 @@ M.Card is a self-hosted Chrome extension for turning X posts, threads, and X Art
 - Capture ordinary posts, thread items, video posters, article previews, and full X Articles.
 - Preserve headings, paragraphs, lists, quotes, dividers, semantic tables, code blocks, and inline image order on article detail pages. X-specific embeds remain a compatibility gap.
 - Export PNG, JPEG, SVG, Markdown, JSON, or an asset ZIP.
+- Optionally install a local macOS helper to send PNG/JPEG cards directly to the `M.Card` album in Photos. See the [Photos helper guide](PHOTOS_HELPER_ZH.md).
 - Configure width, padding, font size and family, image layout, background, border, visible fields, watermark, format, and 1x-4x export scale.
 - Render cards inside the extension by default, with `mcard.wlz.si` as an automatic cloud fallback.
 - Persist every default locally in extension-origin IndexedDB. Toast controls are temporary overrides for the current generation session.
@@ -33,6 +34,8 @@ build/chrome-mv3-prod/
 
 The production build includes `tabs/renderer.html` and uses it first. `PLASMO_PUBLIC_RENDERER_URL` only configures the cloud fallback; rebuild after changing it.
 After reloading the extension, refresh any X tabs that were already open. Check that `build/chrome-mv3-prod/manifest.json` matches the package version; `pnpm package:extension:prod` rebuilds before packaging.
+
+The optional **Save to Mac Photos** action requires a one-time local helper installation; normal copy and download do not. See [PHOTOS_HELPER_ZH.md](PHOTOS_HELPER_ZH.md).
 
 Clicking the extension toolbar icon opens the website. Open local default settings from the generation panel on X.
 
