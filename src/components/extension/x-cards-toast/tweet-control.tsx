@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Activity, Clock, Heart, Twitter, User } from 'lucide-react';
+import { Activity, Clock, Heart, MessageSquareQuote, Twitter, User } from 'lucide-react';
 import { useTweetsStore, type TweetControlState } from '../use-tweet-collection';
 import LabelWithIcon from '../label-with-icon';
 
@@ -20,6 +20,7 @@ const TweetControl: React.FC<TweetControlProps> = ({ onChange }) => {
     showTime: true,
     showFooter: true,
     showLogo: true,
+    showQuote: true,
     ...defaultControls,
     ...localState,
   };
@@ -42,7 +43,7 @@ const TweetControl: React.FC<TweetControlProps> = ({ onChange }) => {
         className='mb-2'
       />
 
-      <div className="grid grid-cols-5 gap-1">
+      <div className="grid grid-cols-3 gap-1">
         <ControlOption label='time' active={state.showTime} onClick={() => toggleOption('showTime')} />
         <ControlOption
           label='user'
@@ -64,6 +65,7 @@ const TweetControl: React.FC<TweetControlProps> = ({ onChange }) => {
           active={state.showLogo}
           onClick={() => toggleOption('showLogo')}
         />
+        <ControlOption label='quote' active={state.showQuote} onClick={() => toggleOption('showQuote')} />
       </div>
     </div>
   );
@@ -89,6 +91,8 @@ const ControlOption: React.FC<ControlOptionProps> = ({ label, active, onClick, }
         return <Activity className="w-4 h-4" />
       case 'logo':
         return <Twitter className="w-4 h-4" />
+      case 'quote':
+        return <MessageSquareQuote className="w-4 h-4" />
     }
   };
 

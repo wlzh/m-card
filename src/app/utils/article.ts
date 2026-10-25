@@ -3,6 +3,24 @@ import type { ArticleBlock } from '@src/hooks/useCardStore';
 const read = (element: Element | null) =>
   ((element as HTMLElement | null)?.innerText || element?.textContent || '').trim();
 
+export const belongsToMainTweet = (post: Element, node: Element): boolean => {
+    const quote = node.closest('[data-testid="quoteTweet"], [data-testid="quotedTweet"]');
+    // X currently renders a quote as a focusable role=link card, not quoteTweet.
+    const quoteLink = node.closest('[role="link"][tabindex="0"]');
+    const isQuoteLink = quoteLink && quoteLink !== post && post.contains(quoteLink)
+      && quoteLink.querySelector('[data-testid="Tweet-User-Avatar"]');
+    const nestedTweet = node.closest('article[data-testid="tweet"]');
+    return !(quote && quote !== post && post.contains(quote))
+      && !isQuoteLink
+      && !(nestedTweet && nestedTweet !== post && post.contains(nestedTweet));
+};
+
+export const queryMainTweetAll = <T extends Element = Element>(post: Element, selector: string): T[] =>
+  Array.from(post.querySelectorAll<T>(selector)).filter((node) => belongsToMainTweet(post, node));
+
+export const queryMainTweet = <T extends Element = Element>(post: Element, selector: string): T | null =>
+  queryMainTweetAll<T>(post, selector)[0] || null;
+
 const findArticleBlockContainer = (body: Element) => {
   let container = body;
   while (container.children.length === 1) {
@@ -38,8 +56,8 @@ export function extractArticleBlocks(body: Element): ArticleBlock[] {
 
 // Keep extraction scoped to the selected post; page metadata may describe another post.
 export function extractPostContent(post: Element) {
-  const body = post.querySelector('[data-testid="twitterArticleRichTextView"], [data-testid="longformRichTextComponent"]');
-  const title = read(post.querySelector('[data-testid="twitter-article-title"], [data-testid="articleTitle"], [data-testid="article-title"]'));
+  const body = queryMainTweet(post, '[data-testid="twitterArticleRichTextView"], [data-testid="longformRichTextComponent"]');
+  const title = read(queryMainTweet(post, '[data-testid="twitter-article-title"], [data-testid="articleTitle"], [data-testid="article-title"]'));
   if (body) {
     const articleBlocks = extractArticleBlocks(body);
     const text = articleBlocks.flatMap((block) => {
@@ -49,13 +67,13 @@ export function extractPostContent(post: Element) {
     return { title, text, articleBlocks, articleMode: 'full' as const };
   }
 
-  const ordinary = read(post.querySelector('[data-testid="tweetText"]'));
+  const ordinary = read(queryMainTweet(post, '[data-testid="tweetText"]'));
   // Timeline previews have no title testid. The cover's next sibling contains
   // two dir=auto blocks: title and excerpt. Do not mistake an ordinary quote for the post.
-  const cover = post.querySelector('[data-testid="article-cover-image"]');
+  const cover = queryMainTweet(post, '[data-testid="article-cover-image"]');
   if (cover && !ordinary) {
     const blocks = cover.nextElementSibling?.querySelectorAll('[dir="auto"]');
     return { title: title || read(blocks?.[0] || null), text: read(blocks?.[1] || null), articleMode: 'preview' as const };
   }
-  return { title: title || undefined, text: ordinary || read(post.querySelector('[data-testid="richText"]')) };
+  return { title: title || undefined, text: ordinary || read(queryMainTweet(post, '[data-testid="richText"]')) };
 }

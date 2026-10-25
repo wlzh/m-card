@@ -1,10 +1,11 @@
 import * as _ from 'lodash-es';
-import { extractPostContent } from './article';
+import { belongsToMainTweet, extractPostContent, queryMainTweet, queryMainTweetAll } from './article';
 
 import { domToPng, domToJpeg, domToSvg, type Options, createContext, destroyContext } from 'modern-screenshot'
 import type { XConfig } from '@src/hooks/useCardStore';
 import type { CardConfig } from '@src/components/extension/use-tweet-collection';
 import { extractEngagementStats } from './engagement';
+import { extractQuotedTweet } from './quoted-tweet';
 import { iframeMessageSystem } from './IFrameMessageSystem';
 import { getAdjacentCellDiv, traverseAndCheck, traverseAndCheckAsync } from './element';
 
@@ -246,10 +247,10 @@ export function extractTweetInfo(postElement: Element | null) {
   if (!postElement) return null;
 
   // 提取头像
-  tweet.avatar = postElement.querySelector<HTMLImageElement>('[data-testid="Tweet-User-Avatar"] img, img[draggable="true"]')?.src;
+  tweet.avatar = queryMainTweet<HTMLImageElement>(postElement, '[data-testid="Tweet-User-Avatar"] img, img[draggable="true"]')?.src;
 
   // 提取用户信息和时间
-  const userInfoDiv = postElement.querySelector('[data-testid="User-Name"]');
+  const userInfoDiv = queryMainTweet(postElement, '[data-testid="User-Name"]');
   if (!userInfoDiv) return;
 
   const authorUrls = Array.from(userInfoDiv.querySelectorAll<HTMLAnchorElement>('a')).map(e => e.href);
@@ -259,7 +260,7 @@ export function extractTweetInfo(postElement: Element | null) {
   tweet.authorUrl = authorUrls.length > 0 ? authorUrls[0] : '';
 
   //帖子URL
-  const xPostStatusUrls = Array.from(postElement.querySelectorAll<HTMLAnchorElement>('a[href*="/status/"]')).map(a => a.href).filter(href => /\/status\/\d+(?:\?.*)?$/.test(href));
+  const xPostStatusUrls = queryMainTweetAll<HTMLAnchorElement>(postElement, 'a[href*="/status/"]').map(a => a.href).filter(href => /\/status\/\d+(?:\?.*)?$/.test(href));
   //console.log('xPostStatusUrls', xPostStatusUrls);
   tweet.url = xPostStatusUrls.length > 0 ? xPostStatusUrls[0] : '';
 
@@ -268,7 +269,7 @@ export function extractTweetInfo(postElement: Element | null) {
   // console.log('timeStr', timeStr, postElement.querySelector('time'));
   tweet.time = timeStr ? new Date(timeStr).getTime() / 1000 : 0;
   if (/\/status\/\d+(?:\?.*)?$/.test(window.location.href)) {
-    timeStr = postElement.querySelector('time')?.getAttribute('datetime');
+    timeStr = queryMainTweet(postElement, 'time')?.getAttribute('datetime');
     if (timeStr) {
       tweet.time = new Date(timeStr).getTime() / 1000;
     }
@@ -276,8 +277,9 @@ export function extractTweetInfo(postElement: Element | null) {
 
 
   Object.assign(tweet, extractPostContent(postElement));
+  if (tweet.articleMode !== 'full') tweet.quotedTweet = extractQuotedTweet(postElement);
   tweet.tags = [];
-  postElement.querySelectorAll('[data-testid="tweetText"] a[href^="/hashtag/"]').forEach(tag => {
+  queryMainTweetAll(postElement, '[data-testid="tweetText"] a[href^="/hashtag/"]').forEach(tag => {
     const tagText = tag.textContent;
     tweet.tags.push(tagText);
     tweet.text = tweet.text.replace(tagText, ''); // 从文本中移除标签
@@ -286,7 +288,7 @@ export function extractTweetInfo(postElement: Element | null) {
 
   // 提取图片（如果有）
   const images = _.compact([
-    ...postElement.querySelectorAll<HTMLImageElement>('[data-testid="tweetPhoto"] img, [data-testid="article-cover-image"] img'),
+    ...queryMainTweetAll<HTMLImageElement>(postElement, '[data-testid="tweetPhoto"] img, [data-testid="article-cover-image"] img'),
     // ...postElement.querySelectorAll('[data-testid="tweetPhoto"] video')
   ]);
   tweet.images = Array.from(images).map(img => img.src);
@@ -306,7 +308,7 @@ export function extractTweetInfo(postElement: Element | null) {
   // console.log('tweet.images', tweet.images);
 
   // 提取视频（如果有）
-  const video = postElement.querySelector('video');
+  const video = queryMainTweet<HTMLVideoElement>(postElement, 'video');
   if (video) {
     const source = video.currentSrc || video.src || video.querySelector('source')?.src || '';
     tweet.video = {
@@ -316,15 +318,15 @@ export function extractTweetInfo(postElement: Element | null) {
   }
 
   // 提取链接（如果有）
-  const links = postElement.querySelectorAll('a[href^="https://"]') as NodeListOf<HTMLAnchorElement>;
-  tweet.links = Array.from(links).map(link => ({
+  const links = queryMainTweetAll<HTMLAnchorElement>(postElement, 'a[href^="https://"]');
+  tweet.links = links.map(link => ({
     href: link.href,
     text: link.textContent,
     src: link.querySelector('img')?.src === tweet.avatar ? undefined : link.querySelector('img')?.src.replace(/name=\w+/, 'name=large')
   }));
 
   // X switches like/retweet test IDs after the current account activates them.
-  Object.assign(tweet, extractEngagementStats(postElement));
+  Object.assign(tweet, extractEngagementStats(postElement, node => belongsToMainTweet(postElement, node)));
   // tweet.views = stats.querySelector('a[href$="/analytics"]').textContent;
 
   return tweet;

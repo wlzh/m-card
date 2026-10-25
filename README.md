@@ -15,6 +15,7 @@ M.Card is a self-hosted Chrome extension for turning X posts, threads, and X Art
 - Persist every default locally in extension-origin IndexedDB. Toast controls are temporary overrides for the current generation session.
 - Enable or disable a customizable watermark, enabled as `@wlzh` by default. Save up to five named watermark presets in default settings, then choose a preset or no watermark as a one-session override in the X generation panel.
 - Save, apply, rename, and delete local card templates from the default settings panel. Applying a template keeps your named watermark presets intact.
+- Keep visible quoted posts separate from the main post and optionally render them as nested cards; quote visibility is a local default or per-generation override.
 
 ## Install The Extension
 

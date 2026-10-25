@@ -135,6 +135,7 @@ export interface XConfig {
     title?: string,
     articleMode?: 'preview' | 'full',
     articleBlocks?: ArticleBlock[],
+    quotedTweet?: QuotedTweet,
     text: string,
     links?: {
         href: string,
@@ -151,6 +152,15 @@ export interface XConfig {
     likes: number | string,
     shares: number | string,
     time: number,
+}
+
+export interface QuotedTweet {
+    username: string;
+    handle?: string;
+    avatar?: string;
+    title?: string;
+    text: string;
+    images: string[];
 }
 
 export type ArticleBlock =
@@ -295,6 +305,7 @@ export const factorySettings: PersistedSettings = {
             showTime: true,
             showFooter: true,
             showLogo: true,
+            showQuote: true,
         },
         watermark: {
             enabled: true,
@@ -542,6 +553,10 @@ export const useCardStore = create(
                                     watermark: {
                                         ...factorySettings.cardStyles.watermark,
                                         ...parsed.cardStyles.watermark,
+                                    },
+                                    controls: {
+                                        ...factorySettings.cardStyles.controls,
+                                        ...parsed.cardStyles.controls,
                                     },
                                     watermarkPresets: normalizeWatermarkPresets(parsed.cardStyles.watermarkPresets),
                                 },

@@ -56,6 +56,21 @@ test('a quoted article does not replace the author comment', () => {
   assert.equal(result.text, 'Comment');
   assert.equal(result.articleMode, undefined);
 });
+test('nested quoted article cannot become the main post body or title', () => {
+  const doc = new JSDOM(`<article data-testid="tweet">
+    <div role="link" tabindex="0">
+      <div data-testid="Tweet-User-Avatar"></div>
+      <div data-testid="twitter-article-title">Quoted title</div>
+      <div data-testid="twitterArticleRichTextView"><p>Quoted body</p></div>
+      <div data-testid="tweetText">Quoted text</div>
+    </div>
+    <div data-testid="tweetText">Main comment</div>
+  </article>`).window.document;
+  const result = exportsObject.extractPostContent(doc.querySelector('article'));
+  assert.equal(result.title, undefined);
+  assert.equal(result.text, 'Main comment');
+  assert.equal(result.articleMode, undefined);
+});
 test('rendered line breaks are retained and nested body is not duplicated', () => {
   const doc = new JSDOM('<div data-testid="twitterArticleRichTextView"><div data-testid="longformRichTextComponent">fallback</div></div>').window.document;
   Object.defineProperty(doc.querySelector('[data-testid="twitterArticleRichTextView"]'), 'innerText', { value: 'Heading\n\nParagraph\nLast line' });

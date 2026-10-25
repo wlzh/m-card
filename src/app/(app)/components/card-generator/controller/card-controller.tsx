@@ -6,14 +6,16 @@ import { useCardStore } from "@src/hooks/useCardStore";
 import { useState } from "react";
 import { RadioGroup, RadioGroupItem } from "@components/ui/radio-group";
 import LayoutOptions from "@src/components/extension/layout-options";
+import type { TweetControlState } from "@src/components/extension/use-tweet-collection";
 
 // 卡片显示元素开关，与扩展生成面板（toast）的 CONTROLS 一一对应
-const controlToggles: { key: string, label: string }[] = [
+const controlToggles: { key: keyof TweetControlState, label: string }[] = [
     { key: 'showUser', label: '用户信息' },
     { key: 'showActions', label: '互动数据' },
     { key: 'showTime', label: '时间' },
     { key: 'showFooter', label: '脚注' },
     { key: 'showLogo', label: 'Logo' },
+    { key: 'showQuote', label: '引用卡片' },
 ];
 export const CardController = () => {
     const cardStyles = useCardStore((state) => state.cardStyles);

@@ -22,8 +22,8 @@ const readStat = (container: Element, selector: string): number | string => {
   return ariaLabel.match(/^[\d.,]+(?:\s*[万千KMB])?/i)?.[0]?.replace(/\s+/g, '') || 0;
 };
 
-export const extractEngagementStats = (postElement: Element): EngagementStats => {
-  const groups = Array.from(postElement.querySelectorAll('[role="group"]'));
+export const extractEngagementStats = (postElement: Element, belongsToPost: (node: Element) => boolean = () => true): EngagementStats => {
+  const groups = Array.from(postElement.querySelectorAll('[role="group"]')).filter(belongsToPost);
   const stats = groups.find(group => (
     group.querySelector(STAT_SELECTORS.replies)
     && group.querySelector(STAT_SELECTORS.shares)

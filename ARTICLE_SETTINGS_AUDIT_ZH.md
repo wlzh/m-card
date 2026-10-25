@@ -1,4 +1,4 @@
-# M.Card 0.4.11 文章与设置核对
+# M.Card 0.4.12 文章与设置核对
 
 核对日期：2026-10-25。示例：https://x.com/wlzh/status/2109433207318081885
 
@@ -28,6 +28,7 @@
 | Border Radius | 20px | 卡片圆角 |
 | Image Layout | auto | 自动或 vertical/grid2/grid4；所有模式保留全部图片 |
 | User / Logo | 开 | 作者信息/X 标志；对应快捷 Controls |
+| Quote | 开 | 普通帖的可见引用卡片；默认设置和生图面板均可关闭，引用内容不会计入主帖图片与互动数 |
 | Footer | 开 | 时间和互动数据的总开关 |
 | Time / Actions | 开 | 脚注内部各自控制；时间单独一行，replies/shares/likes 在下一行保持单行 |
 | Watermark | 开，@wlzh；最多 5 个命名预设 | 默认设置管理开关、文字和预设；生图面板可临时选择默认水印、无水印或某个预设，不写回默认值；不受 Footer 影响，与互动数据按文字基线右对齐，过长时在水印区域省略 |

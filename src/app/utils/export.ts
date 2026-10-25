@@ -45,6 +45,16 @@ export const tweet2Markdown = (tweetData: XConfig[]) => {
             });
         }
 
+        if (tweet.quotedTweet) {
+            const quote = tweet.quotedTweet;
+            markdownContent += `> Quoted post by ${quote.username}${quote.handle ? ` (${quote.handle})` : ''}\n>\n`;
+            if (quote.title) markdownContent += `> **${quote.title}**\n>\n`;
+            markdownContent += `${quote.text.split('\n').map((line) => `> ${line}`).join('\n')}\n\n`;
+            quote.images.forEach((image, index) => {
+                markdownContent += `![Quoted image ${index + 1}](${image})\n\n`;
+            });
+        }
+
         //账号URL
         markdownContent += `[${username}](${authorUrl})\n\n`;
 
@@ -94,7 +104,7 @@ export const exportAsAsset = async (tweetData: XConfig | XConfig[]) => {
 
     try {
         for (let tweetIndex = 0; tweetIndex < tweets.length; tweetIndex++) {
-            const { username, images = [], video, text, articleBlocks = [] } = tweets[tweetIndex];
+            const { username, images = [], video, text, articleBlocks = [], quotedTweet } = tweets[tweetIndex];
             const folder = zip.folder(`${String(tweetIndex + 1).padStart(2, '0')}-${safeFileName(username || 'tweet')}`)!;
             folder.file("tweet.json", JSON.stringify(tweets[tweetIndex], null, 2));
             folder.file("tweet.md", tweet2Markdown([tweets[tweetIndex]]));
@@ -103,6 +113,7 @@ export const exportAsAsset = async (tweetData: XConfig | XConfig[]) => {
             const assetImages = [...new Set([
                 ...images,
                 ...articleBlocks.flatMap((block) => block.type === 'image' ? [block.src] : []),
+                ...(quotedTweet?.images || []),
             ])];
             for (let imageIndex = 0; imageIndex < assetImages.length; imageIndex++) {
                 const highQualityUrl = getHighQualityImageUrl(assetImages[imageIndex]);

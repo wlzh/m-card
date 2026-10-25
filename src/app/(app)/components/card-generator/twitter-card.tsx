@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils'; // Assuming you have a utility for class names
 import ImageLayout from '../ImageLayout';
 import * as _ from "lodash-es"
 import { formatTimestamp } from '@src/app/utils/format';
-import type { CardStore, XConfig } from '@src/hooks/useCardStore';
+import type { CardStore, QuotedTweet, XConfig } from '@src/hooks/useCardStore';
 
 interface TwitterCardProps {
     xConfig: XConfig[],
@@ -199,6 +199,21 @@ const Watermark = ({ text }: { text: string }) => {
     )
 }
 
+const QuotedTweetCard = ({ quote }: { quote: QuotedTweet }) => (
+    <div className="mt-3 min-w-0 border border-black/15 bg-white/20" style={{ borderRadius: '0.75em', padding: '0.85em' }}>
+        <div className="mb-2 flex min-w-0 items-center gap-2" style={{ fontSize: '0.85em' }}>
+            {quote.avatar && <img src={quote.avatar} alt="Quoted author" className="h-6 w-6 shrink-0 rounded-full object-cover" />}
+            <span className="min-w-0 truncate font-semibold">{quote.username}</span>
+            {quote.handle && <span className="min-w-0 truncate opacity-60">{quote.handle}</span>}
+        </div>
+        {quote.title && <div className="mb-1 font-semibold" style={{ overflowWrap: 'anywhere' }}>{quote.title}</div>}
+        {quote.text && <div className="whitespace-pre-wrap" style={{ fontSize: '0.9em', lineHeight: 1.45, overflowWrap: 'anywhere' }}>{quote.text}</div>}
+        {quote.images.length > 0 && <div className="mt-2 overflow-hidden" style={{ borderRadius: '0.5em' }}>
+            <ImageLayout images={quote.images} layout={quote.images.length > 1 ? 'grid2' : 'vertical'} />
+        </div>}
+    </div>
+);
+
 const CardBody: React.FC<{
     xConfig: XConfig,
     cardStyles: CardStore['cardStyles'],
@@ -271,6 +286,9 @@ const CardBody: React.FC<{
                     images={images}
                     layout={layout}
                 />
+            )}
+            {xConfig.articleMode !== 'full' && cardStyles.controls.showQuote !== false && xConfig.quotedTweet && (
+                <QuotedTweetCard quote={xConfig.quotedTweet} />
             )}
         </div>
     )

@@ -34,7 +34,7 @@ test('all persisted settings survive a fresh store, saved-default restore and te
   await first.useCardStore.persist.rehydrate();
   const store = first.useCardStore;
   store.getState().updateBackgroundStyles({ padding: 48, backgroundOpacity: 0.4, backgroundBlur: 3, useGradient: true, backgroundGradientAngle: 57, backgroundStartColor: '#123456', backgroundEndColor: '#abcdef' });
-  store.getState().updateCardStyles({ width: 768, fontSize: 24, fontFamily: 'Noto Sans SC', scale: 90, borderWidth: 3, borderColor: '#345678', borderRadius: 12, exportScale: 3, exportFormat: 'jpeg', hasNoiseTexture: true, noiseTextureOpacity: 0.2, imageLayout: 'vertical', watermark: { enabled: false, text: '@custom' }, controls: { showUser: false, showLogo: true, showFooter: true, showTime: false, showActions: true } });
+  store.getState().updateCardStyles({ width: 768, fontSize: 24, fontFamily: 'Noto Sans SC', scale: 90, borderWidth: 3, borderColor: '#345678', borderRadius: 12, exportScale: 3, exportFormat: 'jpeg', hasNoiseTexture: true, noiseTextureOpacity: 0.2, imageLayout: 'vertical', watermark: { enabled: false, text: '@custom' }, controls: { showUser: false, showLogo: true, showFooter: true, showTime: false, showActions: true, showQuote: false } });
   await store.getState().saveAsDefault();
   await store.persist.rehydrate();
   const expected = JSON.parse(db.get('card-settings')).state;
@@ -54,5 +54,6 @@ test('all persisted settings survive a fresh store, saved-default restore and te
   await store.getState().loadDefault();
   assert.equal(store.getState().cardStyles.watermark.text, '@custom');
   assert.equal(store.getState().cardStyles.watermarkPresets.length, 0);
+  assert.equal(store.getState().cardStyles.controls.showQuote, false);
   assert.equal(store.getState().backgroundStyles.padding, 48);
 });
