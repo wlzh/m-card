@@ -2,6 +2,11 @@
 
 本文件记录 M.Card(x-cards 自托管分支)的版本变更。扩展版本号跟随 `package.json` 的 `version` 字段(Plasmo 构建时会写入扩展 manifest)。
 
+## v0.4.18 (2026-10-25)
+
+- 修复「存入照片」时 AppleScript 把 `ok` 写入 Chrome Native Messaging 标准输出、导致 Chrome 报通信错误的问题；脚本输出现在与协议通道隔离。
+- 增加协议输出回归约束。发生过该错误的图片可能已经进入「照片」，重试前先检查 `M.Card` 相簿。
+
 ## v0.4.17 (2026-10-25)
 
 - 生图面板新增 macOS「存入照片」按钮，仅 PNG/JPEG 可用；本地助手通过 Chrome Native Messaging 分块接收长图，并导入「照片」的 `M.Card` 相簿。

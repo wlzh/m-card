@@ -11,7 +11,7 @@ test('extension exposes and selects the bundled renderer by default', () => {
   const overlay = read('src/contents/plasmo-overlay.tsx');
   const renderer = read('src/tabs/renderer.tsx');
 
-  assert.equal(pkg.version, '0.4.17');
+  assert.equal(pkg.version, '0.4.18');
   assert.match(pkg.scripts['package:extension:prod'], /^pnpm build:extension:prod &&/);
   assert.match(read('scripts/verify-extension-renderer.mjs'), /manifest\.version !== packageVersion/);
   assert.ok(pkg.manifest.web_accessible_resources.some((entry) =>

@@ -118,6 +118,8 @@ private final class ImportSession {
         process.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
         process.arguments = [scriptURL.path, imageURL.path]
         let errorPipe = Pipe()
+        // Native Messaging owns stdout; AppleScript output would corrupt its framed replies.
+        process.standardOutput = FileHandle.nullDevice
         process.standardError = errorPipe
         try process.run()
         process.waitUntilExit()

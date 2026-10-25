@@ -67,3 +67,9 @@ test('Photos button uses a native host only for PNG/JPEG and declares permission
   assert.match(toast, /\['png', 'jpeg'\]\.includes\(activeFormat\)/);
   assert.match(background, /chrome\.runtime\.connectNative\(PHOTOS_HOST\)/);
 });
+
+test('AppleScript output cannot corrupt the native messaging stdout channel', () => {
+  const host = fs.readFileSync(path.join(root, 'native/photos-helper/main.swift'), 'utf8');
+  assert.match(host, /process\.standardOutput = FileHandle\.nullDevice/);
+  assert.match(host, /process\.standardError = errorPipe/);
+});

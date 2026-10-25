@@ -17,4 +17,5 @@ M.Card 的「Save to Mac Photos」按钮仅支持 PNG/JPEG，导入本机「照�
 - 为兼容「照片」的“引用原文件”设置，导入原图保留在 `~/Pictures/M.Card Imports/`。如果「照片」设置为“将项目拷贝到照片图库”，导入后可自行清理该文件夹；若关闭了拷贝选项，不要删除这里的原图，否则「照片」会丢失引用。
 - SVG、Markdown、JSON 和素材 ZIP 不能导入「照片」，面板按钮会禁用；下载、复制功能仍照常使用。
 - 点击后会等待本机助手确认导入。若按钮报“未安装助手”或“禁止访问”，核对扩展 ID、重新加载扩展，并确认系统权限。导入失败时原图会保留在上述文件夹供手动恢复。
+- 如果曾用 v0.4.17 遇到 `Error when communicating with the native messaging host`，图片可能已经导入成功但成功回执被破坏；重试前先检查 `M.Card` 相簿，避免重复导入。
 - 通过 `bash scripts/install-photos-helper.sh 新扩展程序ID` 可更新安装。卸载时删除上述助手目录与 Native Messaging JSON；不会删除已经导入的照片或 `M.Card Imports` 原图。
