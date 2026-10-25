@@ -315,7 +315,7 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
                     transition={{ duration: 0.3 }}
                     className="w-full h-full"
                 >
-                    <ImagePreview format={activeFormat} />
+                    <ImagePreview format={activeFormat} isGenerating={isLoading} />
                 </motion.div>
                 {isLoading && (
                     <div style={styles.loader}>

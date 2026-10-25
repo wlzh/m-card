@@ -11,7 +11,9 @@ test('extension exposes and selects the bundled renderer by default', () => {
   const overlay = read('src/contents/plasmo-overlay.tsx');
   const renderer = read('src/tabs/renderer.tsx');
 
-  assert.equal(pkg.version, '0.4.14');
+  assert.equal(pkg.version, '0.4.15');
+  assert.match(pkg.scripts['package:extension:prod'], /^pnpm build:extension:prod &&/);
+  assert.match(read('scripts/verify-extension-renderer.mjs'), /manifest\.version !== packageVersion/);
   assert.ok(pkg.manifest.web_accessible_resources.some((entry) =>
     entry.matches.includes('https://x.com/*') && entry.resources.includes('tabs/renderer.html')));
   assert.match(overlay, /src=\{localRendererURL\}/);
@@ -30,6 +32,9 @@ test('renderer fallback preserves settings and old cloud settings can migrate on
   assert.match(overlay, /import-card-settings/);
   assert.match(sender, /switchToCloud/);
   assert.match(sender, /renderer-ping/);
+  assert.match(sender, /waitForRenderer\(6, 1500\)/);
+  assert.match(sender, /waitForRenderer\(10, 1500\)/);
+  assert.doesNotMatch(sender, /Cloud renderer load timeout/);
   assert.match(receiver, /event\.origin !== 'https:\/\/x\.com'/);
   assert.doesNotMatch(receiver, /event\.source !== window\.parent/);
   assert.doesNotMatch(messaging, /trustedSources/);

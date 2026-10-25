@@ -32,6 +32,7 @@ build/chrome-mv3-prod/
 ```
 
 生产扩展内置 `tabs/renderer.html` 并优先本地渲染。`PLASMO_PUBLIC_RENDERER_URL` 只配置云端备选地址；修改后必须重新构建并重新加载扩展。
+重新加载扩展后，还要刷新已打开的 X 标签页；在 `build/chrome-mv3-prod/manifest.json` 核对版本与 `package.json` 一致。`pnpm package:extension:prod` 会先重建再打 ZIP，不能只拿旧 ZIP 重新加载。
 
 ## 设置关系
 

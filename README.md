@@ -32,6 +32,7 @@ build/chrome-mv3-prod/
 ```
 
 The production build includes `tabs/renderer.html` and uses it first. `PLASMO_PUBLIC_RENDERER_URL` only configures the cloud fallback; rebuild after changing it.
+After reloading the extension, refresh any X tabs that were already open. Check that `build/chrome-mv3-prod/manifest.json` matches the package version; `pnpm package:extension:prod` rebuilds before packaging.
 
 Clicking the extension toolbar icon opens the website. Open local default settings from the generation panel on X.
 

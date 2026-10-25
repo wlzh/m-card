@@ -5,11 +5,12 @@ import { useTweetsStore } from '../use-tweet-collection';
 interface ImagePreviewProps {
   alt?: string;
   format?: string;
+  isGenerating?: boolean;
 }
 
 const IMAGE_FORMATS = new Set(['png', 'jpeg', 'svg']);
 
-const ImagePreview = ({ alt = "Preview", format = 'png' }: ImagePreviewProps) => {
+const ImagePreview = ({ alt = "Preview", format = 'png', isGenerating = false }: ImagePreviewProps) => {
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -139,7 +140,7 @@ const ImagePreview = ({ alt = "Preview", format = 'png' }: ImagePreviewProps) =>
         }
         {isImageFormat && !imageSrc && (
           <div className="w-full h-full flex items-center justify-center text-neutral-400">
-            Generating preview…
+            {isGenerating ? 'Generating preview…' : 'Preview unavailable. Adjust settings to retry.'}
           </div>
         )}
 

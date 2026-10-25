@@ -30,16 +30,18 @@ function loadPreview(imageSrc) {
   return output.default;
 }
 
-function render(imageSrc, format = 'png') {
+function render(imageSrc, format = 'png', isGenerating = false) {
   const Component = loadPreview(imageSrc);
-  return new JSDOM(renderToStaticMarkup(React.createElement(Component, { format }))).window.document;
+  return new JSDOM(renderToStaticMarkup(React.createElement(Component, { format, isGenerating }))).window.document;
 }
 
-test('an empty image source is a loading state, not a load failure', () => {
-  const doc = render('');
+test('an empty image source only claims to be generating while work is active', () => {
+  const doc = render('', 'png', true);
   assert.equal(doc.querySelector('img'), null);
   assert.match(doc.body.textContent, /Generating preview/);
   assert.doesNotMatch(doc.body.textContent, /Failed to load image/);
+  assert.match(render('').body.textContent, /Preview unavailable/);
+  assert.doesNotMatch(render('').body.textContent, /Generating preview/);
 });
 
 test('image and data export formats render the matching preview mode', () => {

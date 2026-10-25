@@ -2,6 +2,12 @@
 
 本文件记录 M.Card(x-cards 自托管分支)的版本变更。扩展版本号跟随 `package.json` 的 `version` 字段(Plasmo 构建时会写入扩展 manifest)。
 
+## v0.4.15 (2026-10-25)
+
+- 修复生产 ZIP 可能打包上一版扩展的问题：打包前强制重建，并校验构建 manifest 与 `package.json` 版本一致。
+- 本地渲染器与云端回退改为有限次 ping 等待；回退失败时恢复本地 iframe，避免永久停在不可用的云端。
+- 生图失败后不再一直显示“Generating preview”；实际 Chrome 本地渲染仍需装入本版后复测。
+
 ## v0.4.14 (2026-10-25)
 
 - 从 X 互动栏采集浏览量和书签数；优先使用精确 aria-label 计数，缺失字段不伪造为 0。

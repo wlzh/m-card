@@ -177,6 +177,18 @@ export const sendMessageToIframe = async (name: string, data: any, timeout: numb
   if (!iframe || !iframe.contentWindow) {
     throw new Error('Invalid iframe');
   }
+  const waitForRenderer = async (attempts: number, pingTimeout: number) => {
+    let lastError: unknown;
+    for (let attempt = 0; attempt < attempts; attempt += 1) {
+      try {
+        return await iframeMessageSystem.publish(iframe, 'renderer-ping', {}, pingTimeout);
+      } catch (error) {
+        lastError = error;
+      }
+      if (attempt + 1 < attempts) await new Promise((resolve) => setTimeout(resolve, 250));
+    }
+    throw lastError;
+  };
   const switchToCloud = async () => {
     const fallbackSrc = iframe.dataset.fallbackSrc;
     if (!fallbackSrc) throw new Error('Cloud renderer fallback is unavailable');
@@ -186,16 +198,16 @@ export const sendMessageToIframe = async (name: string, data: any, timeout: numb
     } catch {
       // A completely unavailable local frame cannot provide settings; cloud uses its saved defaults.
     }
+    const localSrc = iframe.src;
     iframe.dataset.rendererMode = 'cloud';
-    await new Promise<void>((resolve, reject) => {
-      const timer = setTimeout(() => reject(new Error('Cloud renderer load timeout')), 20000);
-      iframe.addEventListener('load', () => {
-        clearTimeout(timer);
-        resolve();
-      }, { once: true });
-      iframe.src = fallbackSrc;
-    });
-    await iframeMessageSystem.publish(iframe, 'renderer-ping', {}, 3000);
+    iframe.src = fallbackSrc;
+    try {
+      await waitForRenderer(10, 1500);
+    } catch (error) {
+      iframe.dataset.rendererMode = 'local';
+      iframe.src = localSrc;
+      throw new Error('Cloud renderer did not become ready', { cause: error });
+    }
     if (localSettings) {
       await iframeMessageSystem.publish(iframe, 'import-card-settings', localSettings, 5000);
     }
@@ -204,7 +216,7 @@ export const sendMessageToIframe = async (name: string, data: any, timeout: numb
 
   try {
     try {
-      await iframeMessageSystem.publish(iframe, 'renderer-ping', {}, 2500);
+      await waitForRenderer(6, 1500);
     } catch (localError) {
       if (iframe.dataset.rendererMode !== 'local') throw localError;
       await switchToCloud();
