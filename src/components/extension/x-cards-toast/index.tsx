@@ -17,6 +17,7 @@ import PaddingControl from './padding-control';
 import TweetControl from './tweet-control';
 import { exportAsAsset, exportAsJSON, tweet2Markdown } from '@src/app/utils/export';
 import ScaleControl from './scale-control';
+import WatermarkControl from './watermark-control';
 import FontControl from './font-control';
 import { getLocalRendererUrl } from '@src/config/renderer';
 
@@ -53,6 +54,16 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
     const initialGenerationEndRef = useRef(onInitialGenerationEnd);
     initialGenerationEndRef.current = onInitialGenerationEnd;
     const settingsPanelUrl = getLocalRendererUrl();
+    const refreshDefaults = () => {
+        sendMessageToIframe('get-card-defaults', {}, 3000)
+            .then((defaults) => {
+                if (defaults) {
+                    setUIDefaults(defaults);
+                    void handlePreview(tweetInfo, useTweetsStore.getState().tweets);
+                }
+            })
+            .catch(() => { });
+    };
 
     const finishInitialGeneration = () => {
         if (!initialGenerationPending.current) return;
@@ -392,6 +403,8 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
             });
         }} />
 
+        <WatermarkControl onManage={() => setShowSettings(true)} />
+
         {/* 展开内嵌默认设置面板：水印、宽度、padding、字号、背景、导出等全部默认值
             都在生图窗口里直接改，实时预览、自动保存本机，无需另开网页 */}
         <button
@@ -403,12 +416,8 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
                 const next = !showSettings;
                 setShowSettings(next);
                 if (!next) {
-                    // 收起时重拉默认值：用户刚在内嵌面板里改过，快捷按钮高亮立即跟上
-                    sendMessageToIframe('get-card-defaults', {}, 3000)
-                        .then((defaults) => {
-                            if (defaults) setUIDefaults(defaults);
-                        })
-                        .catch(() => { });
+                    // 收起时重拉默认值：用户刚在内嵌面板里改过，快捷控件与预览立即跟上
+                    refreshDefaults();
                 }
             }}
         >
@@ -496,6 +505,7 @@ export const PreviewToast: React.FC<PreviewToastProps> = ({ tweetInfo, tweetInfo
         cardConfig.controls,
         cardConfig.fontSize,
         cardConfig.fontFamily,
+        cardConfig.watermark,
         cardConfig.scale,
         cardConfig.format,
 

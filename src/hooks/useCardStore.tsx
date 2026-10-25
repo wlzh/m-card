@@ -12,6 +12,48 @@ type PostType = 'landscape' | 'square' | 'portrait' | 'post' | 'story' | 'thumbn
 
 type AspectRatio = '16:9' | '3:2' | '4:3' | '5:4' | '1:1' | '4:5' | '3:4' | '2:3' | '9:16' | '3:1'
 
+export interface WatermarkSettings {
+    enabled: boolean;
+    text: string;
+}
+
+export interface WatermarkPreset {
+    id: string;
+    name: string;
+    text: string;
+}
+
+export const MAX_WATERMARK_PRESETS = 5;
+
+export const createWatermarkPresetId = (index = 0) =>
+    `watermark-${Date.now()}-${index}-${Math.random().toString(36).slice(2, 8)}`;
+
+export const normalizeWatermarkPresets = (value: unknown): WatermarkPreset[] => {
+    if (!Array.isArray(value)) return [];
+
+    const usedIds = new Set<string>();
+    return value.reduce<WatermarkPreset[]>((result, item, index) => {
+        if (!item || typeof item !== 'object') return result;
+        const candidate = item as Partial<WatermarkPreset>;
+        const text = typeof candidate.text === 'string' ? candidate.text.trim() : '';
+        if (!text || result.length >= MAX_WATERMARK_PRESETS) return result;
+
+        const baseId = typeof candidate.id === 'string' && candidate.id.trim()
+            ? candidate.id.trim()
+            : `watermark-${index + 1}`;
+        let id = baseId;
+        let suffix = 2;
+        while (usedIds.has(id)) id = `${baseId}-${suffix++}`;
+        usedIds.add(id);
+
+        const name = typeof candidate.name === 'string' && candidate.name.trim()
+            ? candidate.name.trim()
+            : text;
+        result.push({ id, name, text });
+        return result;
+    }, []);
+};
+
 
 interface ImageDimensions {
     width: number;
@@ -176,10 +218,8 @@ export interface CardStore {
         exportScale?: number,
         controls: TweetControlState
         fontFamily: string,
-        watermark: {
-            enabled: boolean,
-            text: string,
-        },
+        watermark: WatermarkSettings,
+        watermarkPresets: WatermarkPreset[],
 
     },
     tabConfig: {
@@ -260,6 +300,7 @@ export const factorySettings: PersistedSettings = {
             enabled: true,
             text: '@wlzh',
         },
+        watermarkPresets: [],
     },
 };
 
@@ -267,22 +308,31 @@ export const factorySettings: PersistedSettings = {
 const DEFAULTS_STORAGE_KEY = 'card-defaults';
 
 // 校验恢复出来的默认值快照形状，防止合法 JSON 但内容错误污染面板
-const isValidSettings = (value: any): value is PersistedSettings => {
-    return !!value
-        && typeof value === 'object'
-        && typeof value.colorIndex === 'number'
-        && !!value.backgroundStyles && typeof value.backgroundStyles === 'object'
-        && !!value.cardStyles && typeof value.cardStyles === 'object'
-        && typeof value.cardStyles.width === 'number'
-        && !!value.tabConfig && typeof value.tabConfig === 'object';
+const isValidSettings = (value: unknown): value is PersistedSettings => {
+    if (!value || typeof value !== 'object') return false;
+    const candidate = value as Partial<PersistedSettings>;
+    return typeof candidate.colorIndex === 'number'
+        && !!candidate.backgroundStyles && typeof candidate.backgroundStyles === 'object'
+        && !!candidate.cardStyles && typeof candidate.cardStyles === 'object'
+        && typeof candidate.cardStyles.width === 'number'
+        && !!candidate.tabConfig && typeof candidate.tabConfig === 'object';
 };
 
 // IndexedDB 存储适配层，与 useTemplatesStore 使用同一套方案。
 // 写入做了 300ms 尾沿防抖：拖动滑块这类高频 set 只落一次盘，省 CPU/IO；
-// 卸载前 flush 保证不丢最后一次修改。
+// 卸载前尽力 flush；浏览器不会等待异步 IndexedDB 写入完成。
 const PERSIST_DEBOUNCE_MS = 300;
 let persistFlushTimer: ReturnType<typeof setTimeout> | null = null;
 let pendingWrites = new Map<string, string>();
+let writeTask: Promise<void> | null = null;
+const enqueueWrite = (write: () => Promise<void>): Promise<void> => {
+    const next = writeTask ? writeTask.catch(() => {}).then(write) : write();
+    writeTask = next;
+    void next.finally(() => {
+        if (writeTask === next) writeTask = null;
+    }).catch(() => {});
+    return next;
+};
 // 首次 getItem 成功前禁止写入：避免挂载期的任何 set()
 // （如示例头像加载触发 addLoadedImage）把出厂默认值写进存储、覆盖用户已有设置
 let hydratedFromStorage = false;
@@ -301,15 +351,21 @@ export const persistSettingsNow = async () => {
         state: { colorIndex, backgroundStyles, cardStyles, tabConfig },
         version: 1,
     });
-    await idbSet('card-settings', serialized);
+    pendingWrites.delete('card-settings');
+    await enqueueWrite(() => idbSet('card-settings', serialized));
 };
 
-const flushPendingWrites = () => {
+const flushPendingWrites = async () => {
+    if (persistFlushTimer) clearTimeout(persistFlushTimer);
     persistFlushTimer = null;
     const writes = pendingWrites;
     pendingWrites = new Map();
-    writes.forEach((value, key) => {
-        void idbSet(key, value);
+    if (!writes.size) {
+        await writeTask;
+        return;
+    }
+    await enqueueWrite(async () => {
+        await Promise.all(Array.from(writes, ([key, value]) => idbSet(key, value)));
     });
 };
 
@@ -331,9 +387,9 @@ const getSettingsChannel = (): BroadcastChannel | null => {
             if (msg?.type !== 'updated' || typeof msg.value !== 'string') return;
             if (persistencePauseCount > 0) return; // 生成中不打扰临时覆盖
             try {
-                // 先把广播带来的最新值直接落盘（绕过防抖），再重读——
-                // 重读必然读到新值，回写也不会产生旧值覆盖
-                await idbSet('card-settings', msg.value);
+                // Discard an older local debounce write before applying the remote value.
+                pendingWrites.delete('card-settings');
+                await enqueueWrite(() => idbSet('card-settings', msg.value));
                 lastBroadcastValue = msg.value; // 对端应用不回播，防回环
                 await useCardStore.persist.rehydrate();
             } catch {
@@ -355,7 +411,7 @@ const broadcastUpdate = (value: string) => {
 const storage: StateStorage = {
     getItem: async (name: string): Promise<string | null> => {
         // 读取前先落盘未写完的数据，避免读到旧值
-        flushPendingWrites();
+        await flushPendingWrites();
         const value = await idbGet<string>(name);
         hydratedFromStorage = true;
         return value || null
@@ -372,18 +428,24 @@ const storage: StateStorage = {
         if (persistFlushTimer) {
             clearTimeout(persistFlushTimer);
         }
-        persistFlushTimer = setTimeout(flushPendingWrites, PERSIST_DEBOUNCE_MS);
+        persistFlushTimer = setTimeout(() => {
+            void flushPendingWrites().catch(error => console.error('Settings write failed:', error));
+        }, PERSIST_DEBOUNCE_MS);
     },
     removeItem: async (name: string): Promise<void> => {
         pendingWrites.delete(name);
-        await idbDel(name)
+        await enqueueWrite(() => idbDel(name));
     },
 }
 
 if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
-    window.addEventListener('beforeunload', flushPendingWrites);
+    window.addEventListener('beforeunload', () => {
+        void flushPendingWrites().catch(error => console.error('Settings write failed:', error));
+    });
     // 扩展面板 iframe 被关闭时 beforeunload 不一定触发，pagehide 再兜底一次
-    window.addEventListener('pagehide', flushPendingWrites);
+    window.addEventListener('pagehide', () => {
+        void flushPendingWrites().catch(error => console.error('Settings write failed:', error));
+    });
 }
 
 export const useCardStore = create(
@@ -442,7 +504,10 @@ export const useCardStore = create(
                 set({
                     cardStyles: {
                         ...get().cardStyles,
-                        ...partCardStyles
+                        ...partCardStyles,
+                        ...('watermarkPresets' in partCardStyles ? {
+                            watermarkPresets: normalizeWatermarkPresets(partCardStyles.watermarkPresets),
+                        } : {}),
                     }
                 })
             },
@@ -470,7 +535,17 @@ export const useCardStore = create(
                     if (raw) {
                         const parsed = JSON.parse(raw);
                         if (isValidSettings(parsed)) {
-                            defaults = parsed;
+                            defaults = {
+                                ...parsed,
+                                cardStyles: {
+                                    ...parsed.cardStyles,
+                                    watermark: {
+                                        ...factorySettings.cardStyles.watermark,
+                                        ...parsed.cardStyles.watermark,
+                                    },
+                                    watermarkPresets: normalizeWatermarkPresets(parsed.cardStyles.watermarkPresets),
+                                },
+                            };
                         } else {
                             console.warn('loadDefault: saved defaults have invalid shape, falling back to factory settings');
                         }
@@ -519,6 +594,7 @@ export const useCardStore = create(
                             ...currentState.cardStyles.watermark,
                             ...persisted.cardStyles?.watermark,
                         },
+                        watermarkPresets: normalizeWatermarkPresets(persisted.cardStyles?.watermarkPresets),
                     },
                 };
             },

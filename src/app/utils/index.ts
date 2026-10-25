@@ -211,7 +211,10 @@ export const sendMessageToIframe = async (name: string, data: any, timeout: numb
     try {
       return await iframeMessageSystem.publish(iframe, name, data, timeout);
     } catch (renderError) {
-      if (iframe.dataset.rendererMode !== 'local') throw renderError;
+      // A renderer error is a valid response, not evidence that the local iframe is unavailable.
+      if (iframe.dataset.rendererMode !== 'local'
+        || !(renderError instanceof Error)
+        || renderError.message !== 'Iframe message timeout') throw renderError;
       await switchToCloud();
       return await iframeMessageSystem.publish(iframe, name, data, timeout);
     }

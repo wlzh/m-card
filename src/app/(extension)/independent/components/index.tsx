@@ -1,6 +1,6 @@
 "use client"
 import { useEffect, useRef } from "react";
-import { useCardStore, setPersistencePaused, persistSettingsNow, type XConfig } from "@src/hooks/useCardStore";
+import { useCardStore, setPersistencePaused, persistSettingsNow, normalizeWatermarkPresets, type XConfig } from "@src/hooks/useCardStore";
 import { CardGenerator } from "../../../(app)/components/card-generator";
 import * as _ from "lodash-es"
 import { generateImage } from "@src/app/utils/image";
@@ -67,6 +67,9 @@ const Index = () => {
                         ...incoming.cardStyles,
                         controls: { ...current.cardStyles.controls, ...incoming.cardStyles?.controls },
                         watermark: { ...current.cardStyles.watermark, ...incoming.cardStyles?.watermark },
+                        watermarkPresets: incoming.cardStyles?.watermarkPresets !== undefined
+                            ? normalizeWatermarkPresets(incoming.cardStyles.watermarkPresets)
+                            : current.cardStyles.watermarkPresets,
                     },
                     tabConfig: { ...current.tabConfig, ...incoming.tabConfig },
                 });
@@ -99,6 +102,8 @@ const Index = () => {
                         format: cardStyles.exportFormat || 'png',
                         scale: cardStyles.exportScale || 2,
                         controls: cardStyles.controls,
+                        watermark: cardStyles.watermark,
+                        watermarkPresets: cardStyles.watermarkPresets,
                     },
                 }, event.origin);
                 return;
@@ -196,6 +201,16 @@ const Index = () => {
                     });
                 }
 
+                // 水印覆盖只属于本次生成；显式 enabled=false 也必须保留，不能回落到默认水印。
+                if (cardConfig?.watermark) {
+                    useCardStore.getState().updateCardStyles({
+                        watermark: {
+                            ...useCardStore.getState().cardStyles.watermark,
+                            ...cardConfig.watermark,
+                        },
+                    });
+                }
+
                 if (cardConfig?.width) {
                     useCardStore.getState().updateCardStyles({
                         width: cardConfig.width,
@@ -251,20 +266,47 @@ const Index = () => {
                                 pendingGenerationSnapshot = null;
                             }
                             setPersistencePaused(false);
-                            // 解除暂停后强制落盘一次快照值，兜底保证存储 == 内存（防抖期间可能有一次被暂停丢弃）
-                            try { await useCardStore.persist.rehydrate(); } finally { resolve(); }
+                            // Re-read persisted defaults after the temporary override is removed.
+                            try {
+                                await useCardStore.persist.rehydrate();
+                            } catch (rehydrateError) {
+                                console.warn('Renderer settings restore failed:', rehydrateError);
+                            } finally {
+                                resolve();
+                            }
                         }
                     });
                 }));
             }
         }
         if (typeof window !== 'undefined') {
+            const reportRequestFailure = async (event: MessageEvent, error: unknown) => {
+                console.error('Renderer request failed:', error);
+                if (event.data?.action === 'generate-card-local' && pendingGenerationSnapshot) {
+                    useCardStore.setState(pendingGenerationSnapshot);
+                    pendingGenerationSnapshot = null;
+                    setPersistencePaused(false);
+                    try { await useCardStore.persist.rehydrate(); } catch (rehydrateError) {
+                        console.warn('Renderer settings restore failed:', rehydrateError);
+                    }
+                }
+                if (!event.data?.requestId || !event.source || event.origin !== 'https://x.com') return;
+                try {
+                    (event.source as Window).postMessage({
+                        action: event.data.action,
+                        requestId: event.data.requestId,
+                        value: { error: error instanceof Error ? error.message : 'Renderer request failed' },
+                    }, event.origin);
+                } catch (replyError) {
+                    console.warn('Renderer error reply failed:', replyError);
+                }
+            };
             const onMessage = (event: MessageEvent) => {
                 if (event.data?.action === 'renderer-ping') {
-                    void fn(event);
+                    void fn(event).catch(error => reportRequestFailure(event, error));
                     return;
                 }
-                queue = queue.then(() => fn(event)).catch(console.error);
+                queue = queue.then(() => fn(event)).catch(error => reportRequestFailure(event, error));
             };
             window.addEventListener('message', onMessage);
 

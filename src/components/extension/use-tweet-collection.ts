@@ -1,4 +1,4 @@
-import type { CardStore, XConfig } from "@src/hooks/useCardStore";
+import type { CardStore, WatermarkPreset, WatermarkSettings, XConfig } from "@src/hooks/useCardStore";
 import { create } from "zustand";
 
 export interface TweetControlState {
@@ -18,6 +18,7 @@ export interface CardConfig {
     scale: number;
     fontSize: number;
     fontFamily: string;
+    watermark?: WatermarkSettings;
 }
 
 // 生成面板（toast）首次加载时从渲染 iframe 拉取的本机默认值快照。
@@ -32,6 +33,8 @@ export interface CardUIDefaults {
     format: string;
     scale: number;
     controls: TweetControlState;
+    watermark: WatermarkSettings;
+    watermarkPresets: WatermarkPreset[];
 }
 
 export const getTweetIdentity = (tweet: XConfig) => {

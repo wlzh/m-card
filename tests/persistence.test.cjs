@@ -10,6 +10,24 @@ function context(database) {
   vm.runInNewContext(source, { exports, console, Promise, setTimeout, clearTimeout, require: id => id === 'idb-keyval' ? storage : require(id) });
   return exports;
 }
+test('watermark presets are normalized, capped, and get stable fallback ids', async () => {
+  const db = new Map();
+  const module = context(db);
+  assert.deepEqual(JSON.parse(JSON.stringify(module.normalizeWatermarkPresets([
+    { id: 'brand', name: ' Brand ', text: ' @brand ' },
+    { id: 'brand', name: '', text: '@brand-two' },
+    { name: 'empty', text: '   ' },
+    ...Array.from({ length: 6 }, (_, index) => ({ name: `extra-${index}`, text: `@extra-${index}` })),
+  ]))), [
+    { id: 'brand', name: 'Brand', text: '@brand' },
+    { id: 'brand-2', name: '@brand-two', text: '@brand-two' },
+    { id: 'watermark-4', name: 'extra-0', text: '@extra-0' },
+    { id: 'watermark-5', name: 'extra-1', text: '@extra-1' },
+    { id: 'watermark-6', name: 'extra-2', text: '@extra-2' },
+  ]);
+  assert.equal(module.normalizeWatermarkPresets(undefined).length, 0);
+});
+
 test('all persisted settings survive a fresh store, saved-default restore and temporary generation', async () => {
   const db = new Map();
   const first = context(db);
@@ -35,5 +53,6 @@ test('all persisted settings survive a fresh store, saved-default restore and te
   store.getState().resetAll();
   await store.getState().loadDefault();
   assert.equal(store.getState().cardStyles.watermark.text, '@custom');
+  assert.equal(store.getState().cardStyles.watermarkPresets.length, 0);
   assert.equal(store.getState().backgroundStyles.padding, 48);
 });
