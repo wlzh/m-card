@@ -167,6 +167,8 @@ export type ArticleBlock =
     | { type: 'heading' | 'paragraph' | 'quote'; text: string }
     | { type: 'list'; items: string[]; ordered: boolean }
     | { type: 'image'; src: string; alt?: string }
+    | { type: 'code'; text: string; language?: string }
+    | { type: 'table'; rows: string[][] }
     | { type: 'divider' };
 
 export interface CardStore {

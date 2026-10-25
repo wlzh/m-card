@@ -25,33 +25,84 @@ const findArticleBlockContainer = (body: Element) => {
   let container = body;
   while (container.children.length === 1) {
     const child = container.firstElementChild;
-    if (!child || child.matches('[data-block="true"], h1, h2, h3, ol, ul, blockquote')) break;
+    if (!child || child.matches('[data-block="true"], h1, h2, h3, p, ol, ul, blockquote, pre, table')) break;
     container = child;
   }
   return container;
 };
 
-export function extractArticleBlocks(body: Element): ArticleBlock[] {
-  const container = findArticleBlockContainer(body);
-  return Array.from(container.children).flatMap<ArticleBlock>((node) => {
-    const image = node.querySelector<HTMLImageElement>('img[src]');
-    if (image?.src) return [{ type: 'image', src: image.src, alt: image.alt || undefined }];
-    if (node.matches('[role="separator"]') || node.querySelector('[role="separator"]')) return [{ type: 'divider' }];
+const structuredSelector = 'h1, h2, h3, p, ol, ul, blockquote, pre, table, img[src], [role="separator"]';
 
-    const heading = node.matches('h1, h2, h3') ? node : node.querySelector('h1, h2, h3');
-    if (heading) {
-      const text = read(heading);
-      return text ? [{ type: 'heading', text }] : [];
-    }
-    if (node.matches('ol, ul')) {
-      const items = Array.from(node.querySelectorAll(':scope > li')).map(read).filter(Boolean);
-      return items.length ? [{ type: 'list', items, ordered: node.tagName === 'OL' }] : [];
-    }
-
+const extractArticleNode = (node: Element): ArticleBlock[] => {
+  if (node.matches('img[src]')) {
+    const image = node as HTMLImageElement;
+    return image.src ? [{ type: 'image', src: image.src, alt: image.alt || undefined }] : [];
+  }
+  if (node.matches('[role="separator"]')) return [{ type: 'divider' }];
+  if (node.matches('pre, code')) {
     const text = read(node);
-    if (!text) return [];
-    return [{ type: node.matches('blockquote') ? 'quote' : 'paragraph', text }];
-  });
+    const language = (node.querySelector('code')?.getAttribute('class') || node.getAttribute('class') || '')
+      .match(/language-([\w-]+)/)?.[1];
+    return text ? [{ type: 'code', text, language }] : [];
+  }
+  if (node.matches('table')) {
+    const rows = Array.from(node.querySelectorAll('tr')).map((row) =>
+      Array.from(row.querySelectorAll(':scope > th, :scope > td')).map(read)
+    ).filter((row) => row.length > 0);
+    return rows.length ? [{ type: 'table', rows }] : [];
+  }
+  if (node.matches('h1, h2, h3')) {
+    const text = read(node);
+    return text ? [{ type: 'heading', text }] : [];
+  }
+  if (node.matches('ol, ul')) {
+    const items = Array.from(node.querySelectorAll(':scope > li')).map(read).filter(Boolean);
+    return items.length ? [{ type: 'list', items, ordered: node.tagName === 'OL' }] : [];
+  }
+  if (node.matches('blockquote')) {
+    const text = read(node);
+    return text ? [{ type: 'quote', text }] : [];
+  }
+
+  if (!node.querySelector(structuredSelector)) {
+    const text = read(node);
+    return text ? [{ type: 'paragraph', text }] : [];
+  }
+
+  const blocks: ArticleBlock[] = [];
+  let pending = '';
+  const flush = () => {
+    const text = pending.trim();
+    if (text) blocks.push({ type: 'paragraph', text });
+    pending = '';
+  };
+  for (const child of Array.from(node.childNodes)) {
+    if (child.nodeType === 3) {
+      pending += child.textContent || '';
+      continue;
+    }
+    if (child.nodeType !== 1) continue;
+    const element = child as Element;
+    if (element.matches('br')) {
+      pending += '\n';
+    } else if (element.matches(structuredSelector) || element.querySelector(structuredSelector)) {
+      flush();
+      blocks.push(...extractArticleNode(element));
+    } else {
+      pending += read(element);
+    }
+  }
+  flush();
+  return blocks;
+};
+
+export function extractArticleBlocks(body: Element): ArticleBlock[] {
+  if (!body.querySelector(structuredSelector)) {
+    const text = read(body);
+    return text ? [{ type: 'paragraph', text }] : [];
+  }
+  const container = findArticleBlockContainer(body);
+  return extractArticleNode(container);
 }
 
 // Keep extraction scoped to the selected post; page metadata may describe another post.
@@ -62,6 +113,7 @@ export function extractPostContent(post: Element) {
     const articleBlocks = extractArticleBlocks(body);
     const text = articleBlocks.flatMap((block) => {
       if (block.type === 'list') return block.items;
+      if (block.type === 'table') return block.rows.map((row) => row.join(' | '));
       return 'text' in block ? [block.text] : [];
     }).join('\n\n') || read(body);
     return { title, text, articleBlocks, articleMode: 'full' as const };

@@ -8,6 +8,13 @@ const articleBlocksToMarkdown = (tweet: XConfig) => tweet.articleBlocks?.map((bl
     if (block.type === 'heading') return `## ${block.text}`;
     if (block.type === 'quote') return block.text.split('\n').map((line) => `> ${line}`).join('\n');
     if (block.type === 'list') return block.items.map((item, index) => `${block.ordered ? `${index + 1}.` : '-'} ${item}`).join('\n');
+    if (block.type === 'code') return `\`\`\`${block.language || ''}\n${block.text}\n\`\`\``;
+    if (block.type === 'table') {
+        const escapeCell = (cell: string) => cell.replace(/\|/g, '\\|').replace(/\n/g, '<br>');
+        const width = Math.max(...block.rows.map((row) => row.length));
+        const row = (cells: string[]) => `| ${Array.from({ length: width }, (_, index) => escapeCell(cells[index] || '')).join(' | ')} |`;
+        return [row(block.rows[0]), row(Array(width).fill('---')), ...block.rows.slice(1).map(row)].join('\n');
+    }
     if (block.type === 'divider') return '---';
     return block.text;
 }).join('\n\n');
@@ -30,8 +37,14 @@ export const tweet2Markdown = (tweetData: XConfig[]) => {
 
         const formattedDate = new Date(time * 1000).toLocaleString();
 
-        let markdownContent = `# Tweet by ${username}\n\n`;
+        let markdownContent = `# ${tweet.title || `Tweet by ${username}`}\n\n`;
         markdownContent += `*Posted on ${formattedDate}*\n\n`;
+        if (tweet.articleBlocks?.length) {
+            const bodyImages = new Set(tweet.articleBlocks.flatMap((block) => block.type === 'image' ? [block.src] : []));
+            images?.filter((src) => !bodyImages.has(src)).forEach((src, index) => {
+                markdownContent += `![Article cover ${index + 1}](${src})\n\n`;
+            });
+        }
         markdownContent += `${articleBlocksToMarkdown(tweet) || text}\n\n`;
 
         if (video && video.poster) {

@@ -89,7 +89,7 @@ test('rendered card includes the quote only when its control is enabled', () => 
   const { TwitterCard } = load('src/app/(app)/components/card-generator/twitter-card.tsx', {
     react: { ...React, default: React },
     '@/lib/utils': { cn: (...values) => values.filter(Boolean).join(' ') },
-    '../ImageLayout': () => null,
+    '../ImageLayout': { default: () => null },
     'lodash-es': {
       uniq: values => [...new Set(values)],
       compact: values => values.filter(Boolean),
@@ -116,4 +116,36 @@ test('rendered card includes the quote only when its control is enabled', () => 
   assert.match(render(true), /Quoted body/);
   assert.doesNotMatch(render(false), /Quoted body/);
   assert.match(render(false), /Main comment/);
+});
+
+test('article code and table survive Markdown export and card rendering', () => {
+  const tweet = {
+    avatar: '', username: 'Author', title: 'Article', text: 'Body', images: ['https://pbs.twimg.com/cover.jpg'],
+    authorUrl: 'https://x.com/author', url: 'https://x.com/author/status/1',
+    replies: 0, shares: 0, likes: 0, time: 0, articleMode: 'full',
+    articleBlocks: [
+      { type: 'paragraph', text: 'Before' },
+      { type: 'table', rows: [['Name', 'Score'], ['A|B', '95']] },
+      { type: 'code', text: 'const n = 1;', language: 'ts' },
+      { type: 'paragraph', text: 'After' },
+    ],
+  };
+  const markdown = load('src/app/utils/export.ts').tweet2Markdown([tweet]);
+  assert.match(markdown, /^# Article\n/);
+  assert.match(markdown, /Article cover 1.*cover\.jpg/);
+  assert.match(markdown, /Before[\s\S]*\| Name \| Score \|[\s\S]*A\\\|B[\s\S]*```ts[\s\S]*const n = 1;[\s\S]*After/);
+
+  const { TwitterCard } = load('src/app/(app)/components/card-generator/twitter-card.tsx', {
+    react: { ...React, default: React },
+    '@/lib/utils': { cn: (...values) => values.filter(Boolean).join(' ') },
+    '../ImageLayout': { default: () => null },
+    'lodash-es': { uniq: values => [...new Set(values)], compact: values => values.filter(Boolean), isArray: Array.isArray, last: values => values[values.length - 1] },
+    '@src/app/utils/format': { formatTimestamp: () => 'date' },
+  }, { encodeURIComponent });
+  const html = ReactDOMServer.renderToStaticMarkup(React.createElement(TwitterCard, {
+    xConfig: [tweet],
+    backgroundStyles: { padding: 20, backgroundColor: '#fff', backgroundOpacity: 1, backgroundBlur: 0 },
+    cardStyles: { width: 582, scale: 100, borderRadius: 20, fontSize: 16, controls: { showUser: false, showActions: false, showTime: false, showFooter: false, showLogo: false }, watermark: { enabled: false, text: '' } },
+  }));
+  assert.match(html, /Before[\s\S]*<table[\s\S]*Name[\s\S]*Score[\s\S]*A\|B[\s\S]*<pre[\s\S]*const n = 1;[\s\S]*After/);
 });

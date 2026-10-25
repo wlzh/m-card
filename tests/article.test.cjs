@@ -40,6 +40,41 @@ test('full article keeps text, lists and images in DOM order', () => {
     { type: 'paragraph', text: 'After' },
   ]);
 });
+test('mixed wrappers retain surrounding text and every image in order', () => {
+  const result = extract(`<div data-testid="twitterArticleRichTextView"><div>
+    Intro <span>first</span><section>before<img src="https://pbs.twimg.com/a.jpg">middle<img src="https://pbs.twimg.com/b.jpg">after</section> End
+  </div></div>`);
+  assert.deepEqual(JSON.parse(JSON.stringify(result.articleBlocks)), [
+    { type: 'paragraph', text: 'Intro first' },
+    { type: 'paragraph', text: 'before' },
+    { type: 'image', src: 'https://pbs.twimg.com/a.jpg' },
+    { type: 'paragraph', text: 'middle' },
+    { type: 'image', src: 'https://pbs.twimg.com/b.jpg' },
+    { type: 'paragraph', text: 'after' },
+    { type: 'paragraph', text: 'End' },
+  ]);
+});
+test('nested heading, table, and code retain their article position and text fallback', () => {
+  const result = extract(`<div data-testid="twitterArticleRichTextView"><div>
+    <section><h2>Title</h2><p>Before</p></section>
+    <table><tr><th>Model</th><th>Score</th></tr><tr><td>A</td><td>95</td></tr></table>
+    <pre><code class="language-ts">const n = 1;</code></pre>
+    <p>After</p>
+  </div></div>`);
+  assert.deepEqual(JSON.parse(JSON.stringify(result.articleBlocks)), [
+    { type: 'heading', text: 'Title' },
+    { type: 'paragraph', text: 'Before' },
+    { type: 'table', rows: [['Model', 'Score'], ['A', '95']] },
+    { type: 'code', text: 'const n = 1;', language: 'ts' },
+    { type: 'paragraph', text: 'After' },
+  ]);
+  assert.match(result.text, /Model \| Score/);
+  assert.match(result.text, /const n = 1;/);
+});
+test('text-only article body still yields a paragraph', () => {
+  const result = extract('<div data-testid="twitterArticleRichTextView">Only text</div>');
+  assert.deepEqual(JSON.parse(JSON.stringify(result.articleBlocks)), [{ type: 'paragraph', text: 'Only text' }]);
+});
 test('timeline article captures title and excerpt', () => {
   const result = extract('<div><div data-testid="article-cover-image"><img></div><div><div><div dir="auto">Title</div></div><div dir="auto">Excerpt...</div></div></div>');
   assert.equal(result.title, 'Title');

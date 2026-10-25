@@ -272,6 +272,10 @@ const CardBody: React.FC<{
                                 {block.items.map((item, itemIndex) => <li key={itemIndex} style={{ marginBottom: '0.35em' }}>{item}</li>)}
                             </List>;
                         }
+                        if (block.type === 'code') return <pre key={index} style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', fontSize: '0.82em', lineHeight: 1.45, padding: '0.8em', margin: '0.8em 0', borderRadius: '0.4em', background: 'rgba(127, 127, 127, 0.12)' }}><code>{block.text}</code></pre>;
+                        if (block.type === 'table') return <table key={index} style={{ width: '100%', tableLayout: 'fixed', borderCollapse: 'collapse', fontSize: '0.78em', margin: '0.8em 0 1em' }}><tbody>
+                            {block.rows.map((row, rowIndex) => <tr key={rowIndex}>{row.map((cell, cellIndex) => <td key={cellIndex} style={{ border: '1px solid rgba(127, 127, 127, 0.35)', padding: '0.4em', overflowWrap: 'anywhere', verticalAlign: 'top' }}>{cell}</td>)}</tr>)}
+                        </tbody></table>;
                         return <div key={index} style={{ lineHeight: 1.55, marginBottom: '0.85em', whiteSpace: 'pre-wrap' }}>{block.text}</div>;
                     })}
                 </div>
