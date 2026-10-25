@@ -7,6 +7,7 @@ import { ExportTab } from "./export-tab";
 import { Button } from "@components/ui/button";
 import { InputController } from "./controller/input-controller";
 import { SaveAsTemplateButton } from "../save-as-template-button";
+import { TemplateList } from "../template-list";
 import { CardController } from "./controller/card-controller";
 import { WatermarkController } from "./controller/watermark-controller";
 
@@ -20,13 +21,13 @@ export const CardGenerator = () => {
         <div className="flex   mx-auto  w-full   md:py-5 px-0 md:px-6">
             <Display></Display>
             <div className="flex-1 min-w-[320px]  h-[578px] px-4 pb-4 overflow-auto  sm:block hidden ">
-                <div className="py-2 flex gap-x-2">
+                <div className="flex flex-wrap gap-2 py-2">
                     <Button onClick={() => resetAll()} size="sm" variant="secondary">Reset</Button>
                     <Button onClick={() => saveAsDefault()} size="sm" variant="secondary">Save as Default</Button>
                     <Button onClick={() => loadDefault()} size="sm" variant="secondary">Load Default</Button>
                     <SaveAsTemplateButton></SaveAsTemplateButton>
-
                 </div>
+                <TemplateList />
                 <Accordion type="multiple" className="w-full">
                     <ExportTab></ExportTab>
                     <InputController></InputController>

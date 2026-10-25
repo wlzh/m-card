@@ -154,7 +154,6 @@ export const BackgroundController = (props) => {
                             onChange={handleImageUpload}
                             accept="image/*"
                             type="file"
-                            multiple
                         />
                     </div>
                 </label>
