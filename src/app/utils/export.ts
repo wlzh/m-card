@@ -82,6 +82,8 @@ export const tweet2Markdown = (tweetData: XConfig[]) => {
         markdownContent += `Likes: ${likes}\n`;
         markdownContent += `Shares: ${shares}\n`;
         markdownContent += `Replies: ${replies}\n\n`;
+        if (tweet.views !== undefined) markdownContent += `Views: ${tweet.views}\n`;
+        if (tweet.bookmarks !== undefined) markdownContent += `Bookmarks: ${tweet.bookmarks}\n`;
 
         // 创建并下载 Markdown 文件
 

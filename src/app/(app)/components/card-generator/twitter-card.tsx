@@ -306,22 +306,28 @@ const CardFooter = ({ xConfig, controls, watermarkText }: {
     const time = _.isArray(xConfig) ? _.last(xConfig).time : xConfig.time;
     const showTime = controls.showFooter && controls.showTime && Number.isFinite(time);
     const showActions = controls.showFooter && controls.showActions;
+    const extraStats = controls.showFooter && controls.showExtraStats
+        ? (['views', 'bookmarks'] as const).filter((stat) => xConfig[stat] !== undefined && xConfig[stat] !== null)
+        : [];
+    const actions = showActions && <div className="card-footer-actions text-secondary-foreground" style={{ display: 'flex', flex: '1 0 auto', flexWrap: 'nowrap', alignItems: 'baseline', gap: '0.75em', minWidth: 0, whiteSpace: 'nowrap' }}>
+        {(['replies', 'shares', 'likes'] as const).map((stat) => (
+            <div key={stat} className="whitespace-nowrap">
+                <span className="font-medium" style={{ color: "var(--textPrimary)" }}>{xConfig[stat] ?? 0}</span>{" "}{stat}
+            </div>
+        ))}
+    </div>;
     return (
         <div className="card-footer" style={{ display: 'flex', flexDirection: 'column', gap: '0.55em', paddingTop: '0.75em', lineHeight: 1.35 }}>
             {showTime && <div className="card-footer-time text-secondary-foreground" style={{ whiteSpace: 'nowrap' }}>
                 <span>{formatTimestamp(time)}</span>
             </div>}
-            {(showActions || watermarkText) && <div className="card-footer-bottom" style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '0.75em', minWidth: 0 }}>
-                {showActions && <div className="card-footer-actions text-secondary-foreground" style={{ display: 'flex', flex: '1 0 auto', flexWrap: 'nowrap', alignItems: 'baseline', gap: '0.75em', minWidth: 0, whiteSpace: 'nowrap' }}>
-                    {['replies', 'shares', 'likes'].map((stat) => (
-                        <div key={stat} className="whitespace-nowrap">
-                            <span className="font-medium" style={{ color: "var(--textPrimary)" }}>
-                                {xConfig[stat] ?? 0}
-                            </span>{" "}
-                            {stat}
-                        </div>
-                    ))}
-                </div>}
+            {(showActions || extraStats.length > 0 || watermarkText) && <div className="card-footer-bottom" style={{ display: 'flex', alignItems: extraStats.length ? 'flex-end' : 'baseline', justifyContent: 'space-between', gap: '0.75em', minWidth: 0 }}>
+                {extraStats.length ? <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35em', minWidth: 0 }}>
+                    {actions}
+                    <div className="card-footer-extra-stats text-secondary-foreground" style={{ display: 'flex', gap: '0.75em', whiteSpace: 'nowrap', fontSize: '0.85em' }}>
+                        {extraStats.map((stat) => <div key={stat}><span className="font-medium" style={{ color: 'var(--textPrimary)' }}>{xConfig[stat]}</span>{" "}{stat}</div>)}
+                    </div>
+                </div> : actions}
                 {watermarkText && <Watermark text={watermarkText} />}
             </div>}
         </div>

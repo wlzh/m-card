@@ -8,6 +8,7 @@ export interface TweetControlState {
     showFooter: boolean;
     showLogo: boolean;
     showQuote: boolean;
+    showExtraStats: boolean;
 }
 
 export interface CardConfig {

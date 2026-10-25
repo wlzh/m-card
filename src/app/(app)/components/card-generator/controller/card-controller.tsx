@@ -16,6 +16,7 @@ const controlToggles: { key: keyof TweetControlState, label: string }[] = [
     { key: 'showFooter', label: '脚注' },
     { key: 'showLogo', label: 'Logo' },
     { key: 'showQuote', label: '引用卡片' },
+    { key: 'showExtraStats', label: '浏览量/书签' },
 ];
 export const CardController = () => {
     const cardStyles = useCardStore((state) => state.cardStyles);

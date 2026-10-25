@@ -151,6 +151,8 @@ export interface XConfig {
     replies: number | string,
     likes: number | string,
     shares: number | string,
+    views?: number | string,
+    bookmarks?: number | string,
     time: number,
 }
 
@@ -308,6 +310,7 @@ export const factorySettings: PersistedSettings = {
             showFooter: true,
             showLogo: true,
             showQuote: true,
+            showExtraStats: false,
         },
         watermark: {
             enabled: true,

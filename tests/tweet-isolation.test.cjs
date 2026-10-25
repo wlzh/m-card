@@ -37,7 +37,7 @@ test('ordinary post extraction does not absorb a nested quote article, media, li
     <a href="https://x.com/main/status/123">Main status</a>
     <div data-testid="tweetText">Main comment</div>
     <div data-testid="tweetPhoto"><img src="https://pbs.twimg.com/media/main?name=small"></div>
-    <div role="group"><button data-testid="reply">1</button><button data-testid="retweet">2</button><button data-testid="like">3</button></div>
+    <div role="group" aria-label="1 回复、2 次转帖、3 喜欢、4 书签、1234 次观看"><button data-testid="reply">1</button><button data-testid="retweet">2</button><button data-testid="like">3</button><a href="/main/status/123/analytics">1.2K</a><button data-testid="bookmark"></button></div>
   </article>`, { url: 'https://x.com/main/status/123' });
   const article = load('src/app/utils/article.ts');
   const engagement = load('src/app/utils/engagement.ts');
@@ -59,6 +59,7 @@ test('ordinary post extraction does not absorb a nested quote article, media, li
   assert.equal(tweet.avatar, 'https://pbs.twimg.com/main.jpg');
   assert.deepEqual(Array.from(tweet.images), ['https://pbs.twimg.com/media/main?name=large']);
   assert.deepEqual({ replies: tweet.replies, shares: tweet.shares, likes: tweet.likes }, { replies: '1', shares: '2', likes: '3' });
+  assert.deepEqual({ views: tweet.views, bookmarks: tweet.bookmarks }, { views: '1234', bookmarks: '4' });
   assert.equal(tweet.links.some(link => link.href.includes('/quoted/')), false);
   assert.equal(tweet.quotedTweet.username, 'Quoted author');
   assert.equal(tweet.quotedTweet.handle, '@quoted');
@@ -72,6 +73,8 @@ test('ordinary post extraction does not absorb a nested quote article, media, li
   assert.match(markdown, /Quoted post by Quoted author \(@quoted\)/);
   assert.match(markdown, /Quoted body/);
   assert.match(markdown, /Quoted image 1/);
+  assert.match(markdown, /Views: 1234/);
+  assert.match(markdown, /Bookmarks: 4/);
 });
 
 test('quote visibility has matching defaults and controls in both panels', () => {
@@ -83,6 +86,9 @@ test('quote visibility has matching defaults and controls in both panels', () =>
   assert.match(toast, /toggleOption\('showQuote'\)/);
   assert.match(settings, /key: 'showQuote'/);
   assert.match(card, /cardStyles\.controls\.showQuote !== false/);
+  assert.match(store, /showExtraStats: false/);
+  assert.match(toast, /toggleOption\('showExtraStats'\)/);
+  assert.match(settings, /key: 'showExtraStats'/);
 });
 
 test('rendered card includes the quote only when its control is enabled', () => {

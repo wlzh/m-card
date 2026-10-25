@@ -27,9 +27,9 @@ const imports = {
 vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/app/(app)/components/card-generator/twitter-card.tsx', 'utf8'), {
   compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.React },
 }).outputText, { exports: output, require: id => { if (!imports[id]) throw new Error(id); return imports[id]; } });
-function render(patch = {}) {
+function render(patch = {}, tweetPatch = {}) {
   const cardStyles = { width: 768, scale: 100, fontSize: 20, borderRadius: 12, controls: { showUser: true, showLogo: true, showFooter: true, showTime: true, showActions: true }, watermark: { enabled: true, text: '@wlzh' }, ...patch };
-  return new JSDOM(renderToStaticMarkup(React.createElement(output.TwitterCard, { cardStyles, backgroundStyles: { padding: 32, borderRadius: 99, backgroundOpacity: 0.4, backgroundBlur: 3 }, xConfig: [{ username: 'AUTHOR', avatar: '/avatar.png', title: 'TITLE', text: 'BODY', images: [], time: 100, likes: 12 }] }))).window.document;
+  return new JSDOM(renderToStaticMarkup(React.createElement(output.TwitterCard, { cardStyles, backgroundStyles: { padding: 32, borderRadius: 99, backgroundOpacity: 0.4, backgroundBlur: 3 }, xConfig: [{ username: 'AUTHOR', avatar: '/avatar.png', title: 'TITLE', text: 'BODY', images: [], time: 100, likes: 12, ...tweetPatch }] }))).window.document;
 }
 test('width, padding, body font and independent card radius are wired', () => {
   const doc = render();
@@ -67,6 +67,16 @@ test('footer keeps time separate and keeps metrics on the watermark baseline', (
   assert.equal(watermark.style.flex, '0 1 45%');
   assert.equal(watermark.style.minWidth, '0');
   assert.equal(watermark.querySelector('span').style.textOverflow, 'ellipsis');
+});
+test('extended stats are opt-in and align the watermark with the last footer row', () => {
+  const base = { showUser: false, showLogo: false, showFooter: true, showActions: true, showTime: false };
+  const tweet = { views: '76371', bookmarks: '570' };
+  const hidden = render({ controls: { ...base, showExtraStats: false } }, tweet);
+  assert.equal(hidden.querySelector('.card-footer-extra-stats'), null);
+  const shown = render({ controls: { ...base, showExtraStats: true } }, tweet);
+  assert.match(shown.querySelector('.card-footer-extra-stats').textContent, /76371 views.*570 bookmarks/);
+  assert.equal(shown.querySelector('.card-footer-bottom').style.alignItems, 'flex-end');
+  assert.ok(shown.querySelector('.card-footer-watermark'));
 });
 test('watermark supports persisted custom value and off state independently of footer', () => {
   assert.ok(render({ watermark: { enabled: true, text: 'CUSTOM' }, controls: {} }).body.textContent.includes('CUSTOM'));

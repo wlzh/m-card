@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Activity, Clock, Heart, MessageSquareQuote, Twitter, User } from 'lucide-react';
+import { Activity, BarChart3, Clock, Heart, MessageSquareQuote, Twitter, User } from 'lucide-react';
 import { useTweetsStore, type TweetControlState } from '../use-tweet-collection';
 import LabelWithIcon from '../label-with-icon';
 
@@ -21,6 +21,7 @@ const TweetControl: React.FC<TweetControlProps> = ({ onChange }) => {
     showFooter: true,
     showLogo: true,
     showQuote: true,
+    showExtraStats: false,
     ...defaultControls,
     ...localState,
   };
@@ -66,6 +67,7 @@ const TweetControl: React.FC<TweetControlProps> = ({ onChange }) => {
           onClick={() => toggleOption('showLogo')}
         />
         <ControlOption label='quote' active={state.showQuote} onClick={() => toggleOption('showQuote')} />
+        <ControlOption label='extra stats' active={state.showExtraStats} onClick={() => toggleOption('showExtraStats')} />
       </div>
     </div>
   );
@@ -93,6 +95,8 @@ const ControlOption: React.FC<ControlOptionProps> = ({ label, active, onClick, }
         return <Twitter className="w-4 h-4" />
       case 'quote':
         return <MessageSquareQuote className="w-4 h-4" />
+      case 'extra stats':
+        return <BarChart3 className="w-4 h-4" />
     }
   };
 
