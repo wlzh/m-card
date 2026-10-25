@@ -93,6 +93,7 @@ const AnchorOverlay: React.FC<PlasmoCSUIProps> = ({ anchor }) => {
                 id="x-card-ai"
                 src={localRendererURL}
                 data-renderer-mode={rendererMode}
+                data-local-src={localRendererURL}
                 data-fallback-src={CLOUD_RENDERER_URL}
                 style={{
                     width: '100vw',

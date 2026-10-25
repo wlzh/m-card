@@ -172,6 +172,21 @@ export const downloadImage = async (tweetInfo: XConfig | XConfig[], cardConfig: 
 
 
 
+const readinessTasks = new WeakMap<HTMLIFrameElement, Promise<void>>();
+const cloudSwitchTasks = new WeakMap<HTMLIFrameElement, Promise<void>>();
+
+const runRendererTask = (tasks: WeakMap<HTMLIFrameElement, Promise<void>>, iframe: HTMLIFrameElement, work: () => Promise<void>) => {
+  const active = tasks.get(iframe);
+  if (active) return active;
+  const task = work();
+  tasks.set(iframe, task);
+  void task.then(
+    () => { if (tasks.get(iframe) === task) tasks.delete(iframe); },
+    () => { if (tasks.get(iframe) === task) tasks.delete(iframe); },
+  );
+  return task;
+};
+
 export const sendMessageToIframe = async (name: string, data: any, timeout: number = 10000): Promise<any> => {
   const iframe = findXCardsIframe();
   if (!iframe || !iframe.contentWindow) {
@@ -189,7 +204,7 @@ export const sendMessageToIframe = async (name: string, data: any, timeout: numb
     }
     throw lastError;
   };
-  const switchToCloud = async () => {
+  const switchToCloud = () => runRendererTask(cloudSwitchTasks, iframe, async () => {
     const fallbackSrc = iframe.dataset.fallbackSrc;
     if (!fallbackSrc) throw new Error('Cloud renderer fallback is unavailable');
     let localSettings: any = null;
@@ -198,7 +213,7 @@ export const sendMessageToIframe = async (name: string, data: any, timeout: numb
     } catch {
       // A completely unavailable local frame cannot provide settings; cloud uses its saved defaults.
     }
-    const localSrc = iframe.src;
+    const localSrc = iframe.dataset.localSrc || iframe.src;
     iframe.dataset.rendererMode = 'cloud';
     iframe.src = fallbackSrc;
     try {
@@ -212,15 +227,19 @@ export const sendMessageToIframe = async (name: string, data: any, timeout: numb
       await iframeMessageSystem.publish(iframe, 'import-card-settings', localSettings, 5000);
     }
     console.warn('[m-card] Local renderer unavailable; using cloud fallback');
-  };
+  });
 
-  try {
+  const ensureReady = () => runRendererTask(readinessTasks, iframe, async () => {
     try {
       await waitForRenderer(6, 1500);
     } catch (localError) {
       if (iframe.dataset.rendererMode !== 'local') throw localError;
       await switchToCloud();
     }
+  });
+
+  try {
+    await ensureReady();
     try {
       return await iframeMessageSystem.publish(iframe, name, data, timeout);
     } catch (renderError) {

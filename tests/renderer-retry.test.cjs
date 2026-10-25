@@ -12,7 +12,7 @@ const createSender = (publish) => {
   const iframe = {
     src: 'chrome-extension://test/tabs/renderer.html',
     contentWindow: {},
-    dataset: { rendererMode: 'local', fallbackSrc: 'https://mcard.wlz.si/independent' },
+    dataset: { rendererMode: 'local', localSrc: 'chrome-extension://test/tabs/renderer.html', fallbackSrc: 'https://mcard.wlz.si/independent' },
   };
   const output = {};
   vm.runInNewContext(source, {
@@ -59,4 +59,25 @@ test('failed cloud fallback restores the local iframe for a later retry', async 
   await assert.rejects(send('generate-card-local', {}), /Cloud renderer did not become ready/);
   assert.equal(iframe.dataset.rendererMode, 'local');
   assert.equal(iframe.src, 'chrome-extension://test/tabs/renderer.html');
+});
+
+test('concurrent generations share one readiness check and one cloud switch', async () => {
+  let localPings = 0;
+  let cloudPings = 0;
+  let exports = 0;
+  const { send, iframe } = createSender(async (frame, action) => {
+    if (action === 'renderer-ping' && frame.dataset.rendererMode === 'local') {
+      localPings += 1;
+      throw new Error('Iframe message timeout');
+    }
+    if (action === 'renderer-ping') { cloudPings += 1; return { ready: true }; }
+    if (action === 'export-card-settings') { exports += 1; throw new Error('Iframe message timeout'); }
+    return action === 'generate-card-local' ? { dataUrl: 'data:image/png;base64,AA==' } : { ready: true };
+  });
+  const results = await Promise.all([send('generate-card-local', {}), send('generate-card-local', {})]);
+  assert.equal(results.length, 2);
+  assert.equal(localPings, 6);
+  assert.equal(exports, 1);
+  assert.equal(cloudPings, 1);
+  assert.equal(iframe.dataset.rendererMode, 'cloud');
 });
