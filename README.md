@@ -8,6 +8,7 @@ M.Card is a self-hosted Chrome extension for turning X posts, threads, and X Art
 
 - Generate cards directly from the X action bar, with a live preview before copy or download.
 - Capture ordinary posts, thread items, video posters, article previews, and full X Articles.
+- On a reply's own detail page, include visible parent context with the focused reply; on the original post's detail page, exporting a reply keeps only that reply.
 - Preserve headings, paragraphs, lists, quotes, dividers, semantic tables, code blocks, and inline image order on article detail pages. X-specific embeds remain a compatibility gap.
 - Export PNG, JPEG, SVG, Markdown, JSON, or an asset ZIP.
 - Optionally install a local macOS helper to send PNG/JPEG cards directly to the `M.Card` album in Photos. See the [Photos helper guide](PHOTOS_HELPER_ZH.md).

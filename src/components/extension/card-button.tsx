@@ -6,6 +6,7 @@ import { PreviewToast } from "./x-cards-toast";
 import { useTweetsStore } from "./use-tweet-collection";
 import type { PlasmoCSUIAnchor } from "plasmo";
 import { Plus } from "lucide-react";
+import { getDetailConversationPosts } from "@src/app/utils/conversation";
 
 const waitForLoadingIndicator = () => new Promise<void>((resolve) => {
     requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
@@ -18,7 +19,8 @@ const extractTweetThread = async (postElement: Element) => {
     if (!tweetInfo) throw new Error('Unable to read this post from the current X page');
 
     await waitForNextFrame();
-    const thread = await getPostThreadAsync(postElement);
+    const thread = getDetailConversationPosts(postElement, window.location.href, tweetInfo.url)
+        ?? await getPostThreadAsync(postElement);
     const tweetInfos = [];
     for (const element of thread) {
         const info = element === postElement ? tweetInfo : extractTweetInfo(element);
