@@ -37,15 +37,30 @@ class IFrameMessageSystem {
   publish(iframe: HTMLIFrameElement, action: string, data: any, timeout: number = 10000): Promise<any> {
     return new Promise((resolve, reject) => {
       const requestId = crypto.randomUUID();
-      const timeoutId = setTimeout(() => {
+      const targetOrigin = new URL(iframe.src).origin;
+      this.trustedOrigins.add(targetOrigin);
+      let waitingForLoad = false;
+      let settled = false;
+      const responseAction = `${action}:${requestId}`;
+      const cleanup = () => {
+        clearTimeout(timeoutId);
+        iframe.removeEventListener('load', send);
         unsubscribe();
-        reject(new Error('Iframe message timeout'));
+      };
+      const fail = (error: unknown) => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        reject(error);
+      };
+      const timeoutId = setTimeout(() => {
+        fail(new Error('Iframe message timeout'));
       }, timeout);
 
-      const responseAction = `${action}:${requestId}`;
       const responseHandler = (response: any) => {
-        clearTimeout(timeoutId);
-        unsubscribe();
+        if (settled) return;
+        settled = true;
+        cleanup();
         if (response?.error) {
           reject(new Error(response.error));
           return;
@@ -54,14 +69,25 @@ class IFrameMessageSystem {
       };
 
       const unsubscribe = this.subscribe(responseAction, responseHandler);
-
-      const targetOrigin = new URL(iframe.src).origin;
-      this.trustedOrigins.add(targetOrigin);
-      iframe.contentWindow?.postMessage({
-        action,
-        requestId,
-        body: data
-      }, targetOrigin);
+      const send = () => {
+        if (settled) return;
+        try {
+          if (new URL(iframe.src).origin !== targetOrigin) {
+            throw new Error('Iframe navigated before the message was sent');
+          }
+          if (!iframe.contentWindow) throw new Error('Iframe is unavailable');
+          iframe.contentWindow.postMessage({ action, requestId, body: data }, targetOrigin);
+        } catch (error) {
+          // A new iframe initially inherits x.com's origin until its own page loads.
+          if (!waitingForLoad && /target origin|recipient window.s origin/i.test(String((error as Error)?.message))) {
+            waitingForLoad = true;
+            iframe.addEventListener('load', send, { once: true });
+            return;
+          }
+          fail(error);
+        }
+      };
+      send();
     });
   }
 
