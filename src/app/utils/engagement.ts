@@ -16,8 +16,8 @@ const readStat = (container: Element, selector: string): number | string => {
   const element = container.querySelector(selector);
   if (!element) return 0;
 
-  const visibleValue = element.textContent?.trim();
-  if (visibleValue) return visibleValue;
+  const visibleValue = element.textContent?.trim().match(/^[\d.,]+(?:\s*[万千KMB])?/i)?.[0];
+  if (visibleValue) return visibleValue.replace(/\s+/g, '');
 
   // X omits visible text for zero counts, but keeps the count at the start of aria-label.
   const ariaLabel = element.getAttribute('aria-label')?.trim() || '';

@@ -50,13 +50,14 @@ export const TwitterCard: React.FC<TwitterCardProps> = ({ xConfig, backgroundSty
                 width: cardStyles.width,
             }}
         >
-            <div className="relative w-full grid place-items-center mobile-scaling pointer-events-none">
+            <div className="relative w-full min-w-0 grid place-items-center mobile-scaling pointer-events-none" style={{ gridTemplateColumns: 'minmax(0, 1fr)' }}>
 
-                <div className=" overflow-hidden w-full h-full relative content-shadow">
+                <div className="overflow-hidden w-full min-w-0 h-full relative content-shadow">
                     <div
                         id="content"
-                        className="grid place-items-center content-container transition-colors h-full w-full"
+                        className="grid place-items-center content-container transition-colors h-full w-full min-w-0"
                         style={{
+                            gridTemplateColumns: 'minmax(0, 1fr)',
                             padding: backgroundStyles.padding || 0,
                             fontSize: 14,
                             perspective: 1000
@@ -67,7 +68,7 @@ export const TwitterCard: React.FC<TwitterCardProps> = ({ xConfig, backgroundSty
 
                         {/* Card container */}
                         <div
-                            className="relative z-20 transition-all w-full card-holder"
+                            className="relative z-20 transition-all w-full min-w-0 max-w-full card-holder"
                             style={{
                                 transform: `scale(${cardStyles.scale}%)`,
                                 // 面板 Font → Select Font 选择的字体（默认 sans-serif 不加，走系统栈）
@@ -79,7 +80,7 @@ export const TwitterCard: React.FC<TwitterCardProps> = ({ xConfig, backgroundSty
                             {/* Card body */}
                             <div
                                 className={cn(
-                                    "select-none relative transition-all",
+                                    "select-none relative transition-all min-w-0",
                                     "h-full w-full backdrop-blur-[18px] backdrop-saturate-[177%] pt-[2em] pb-[1.5em] px-[2em]",
                                     'card-background-light transition-colors  inset-0 rounded-[inherit]',
                                     // absolute
@@ -238,7 +239,7 @@ const CardBody: React.FC<{
     const hasStructuredArticle = xConfig.articleMode === 'full' && Boolean(xConfig.articleBlocks?.length);
 
     return (
-        <div className="flex-grow flex flex-col justify-center">
+        <div className="flex-grow flex flex-col min-w-0 justify-center">
             {/* 文章标题(X Articles):粗体大号,普通推文无此行 */}
             {xConfig.title ? (
                 <div
@@ -309,7 +310,7 @@ const CardFooter = ({ xConfig, controls, watermarkText }: {
     const extraStats = controls.showFooter && controls.showExtraStats
         ? (['views', 'bookmarks'] as const).filter((stat) => xConfig[stat] !== undefined && xConfig[stat] !== null)
         : [];
-    const actions = showActions && <div className="card-footer-actions text-secondary-foreground" style={{ display: 'flex', flex: '1 0 auto', flexWrap: 'nowrap', alignItems: 'baseline', gap: '0.75em', minWidth: 0, whiteSpace: 'nowrap' }}>
+    const actions = showActions && <div className="card-footer-actions text-secondary-foreground" style={{ display: 'flex', flex: '1 1 auto', flexWrap: 'wrap', alignItems: 'baseline', gap: '0.35em 0.75em', minWidth: 0 }}>
         {(['replies', 'shares', 'likes'] as const).map((stat) => (
             <div key={stat} className="whitespace-nowrap">
                 <span className="font-medium" style={{ color: "var(--textPrimary)" }}>{xConfig[stat] ?? 0}</span>{" "}{stat}
@@ -321,10 +322,10 @@ const CardFooter = ({ xConfig, controls, watermarkText }: {
             {showTime && <div className="card-footer-time text-secondary-foreground" style={{ whiteSpace: 'nowrap' }}>
                 <span>{formatTimestamp(time)}</span>
             </div>}
-            {(showActions || extraStats.length > 0 || watermarkText) && <div className="card-footer-bottom" style={{ display: 'flex', alignItems: extraStats.length ? 'flex-end' : 'baseline', justifyContent: 'space-between', gap: '0.75em', minWidth: 0 }}>
+            {(showActions || extraStats.length > 0 || watermarkText) && <div className="card-footer-bottom" style={{ display: 'flex', flexWrap: 'wrap', alignItems: extraStats.length ? 'flex-end' : 'baseline', justifyContent: 'space-between', gap: '0.75em', minWidth: 0 }}>
                 {extraStats.length ? <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35em', minWidth: 0 }}>
                     {actions}
-                    <div className="card-footer-extra-stats text-secondary-foreground" style={{ display: 'flex', gap: '0.75em', whiteSpace: 'nowrap', fontSize: '0.85em' }}>
+                    <div className="card-footer-extra-stats text-secondary-foreground" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35em 0.75em', fontSize: '0.85em' }}>
                         {extraStats.map((stat) => <div key={stat}><span className="font-medium" style={{ color: 'var(--textPrimary)' }}>{xConfig[stat]}</span>{" "}{stat}</div>)}
                     </div>
                 </div> : actions}

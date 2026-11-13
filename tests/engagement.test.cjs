@@ -38,6 +38,17 @@ test('engagement extraction uses aria-label when X hides the visible count', () 
   assert.deepEqual({ ...stats }, { replies: '0', shares: '1.2万', likes: '3,456' });
 });
 
+test('engagement extraction ignores text injected beside a visible count', () => {
+  const stats = extract(`
+    <div role="group">
+      <button data-testid="reply">289</button>
+      <button data-testid="retweet">62</button>
+      <button data-testid="like">1,701<span>良好 喜欢 / 粉丝: 2.79% 1,701 / 61,000</span></button>
+    </div>
+  `);
+  assert.deepEqual({ ...stats }, { replies: '289', shares: '62', likes: '1,701' });
+});
+
 test('engagement extraction ignores unrelated role groups', () => {
   const stats = extract(`
     <div role="group"><button aria-label="More"></button></div>

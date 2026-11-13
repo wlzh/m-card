@@ -12,10 +12,10 @@ const ImageLayout: React.FC<{
         grid4: 'grid grid-cols-2 gap-2',
     };
     return images.length ? (
-        <div className={`w-full ${layouts[layout]}`}>
+        <div className={`w-full min-w-0 ${layouts[layout]}`}>
             {images.map((src, index) => (
                 <img key={`${index}-${src}`} src={src} alt={`Image ${index + 1}`}
-                    className="w-full h-auto object-contain" loading="eager" />
+                    className="w-full max-w-full h-auto object-contain" loading="eager" />
             ))}
         </div>
     ) : null;

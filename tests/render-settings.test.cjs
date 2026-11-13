@@ -58,15 +58,26 @@ test('footer keeps time separate and keeps metrics on the watermark baseline', (
   assert.equal(footer.style.flexDirection, 'column');
   assert.notEqual(footer.style.gap, '');
   assert.equal(time.style.whiteSpace, 'nowrap');
-  assert.equal(actions.style.flexWrap, 'nowrap');
-  assert.equal(actions.style.whiteSpace, 'nowrap');
+  assert.equal(actions.style.flexWrap, 'wrap');
+  assert.equal(actions.style.flex, '1 1 auto');
   assert.notEqual(actions.style.gap, '');
   assert.equal(bottom.style.display, 'flex');
+  assert.equal(bottom.style.flexWrap, 'wrap');
   assert.equal(bottom.style.alignItems, 'baseline');
   assert.equal(watermark.style.marginLeft, 'auto');
   assert.equal(watermark.style.flex, '0 1 45%');
   assert.equal(watermark.style.minWidth, '0');
   assert.equal(watermark.querySelector('span').style.textOverflow, 'ellipsis');
+});
+test('wide images and long metrics cannot set the card grid minimum width', () => {
+  const doc = render({}, { images: ['/wide.png'], likes: '1,701' });
+  const content = doc.querySelector('#content');
+  const holder = doc.querySelector('.card-holder');
+  const image = doc.querySelector('img[alt="Image 1"]');
+  assert.equal(content.style.gridTemplateColumns, 'minmax(0, 1fr)');
+  assert.ok(holder.classList.contains('min-w-0'));
+  assert.ok(holder.classList.contains('max-w-full'));
+  assert.ok(image.classList.contains('max-w-full'));
 });
 test('extended stats are opt-in and align the watermark with the last footer row', () => {
   const base = { showUser: false, showLogo: false, showFooter: true, showActions: true, showTime: false };
