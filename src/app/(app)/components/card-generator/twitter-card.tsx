@@ -322,7 +322,7 @@ const CardFooter = ({ xConfig, controls, watermarkText }: {
             {showTime && <div className="card-footer-time text-secondary-foreground" style={{ whiteSpace: 'nowrap' }}>
                 <span>{formatTimestamp(time)}</span>
             </div>}
-            {(showActions || extraStats.length > 0 || watermarkText) && <div className="card-footer-bottom" style={{ display: 'grid', gridTemplateColumns: watermarkText ? 'minmax(0, 1fr) minmax(0, 45%)' : 'minmax(0, 1fr)', alignItems: extraStats.length ? 'end' : 'baseline', columnGap: '0.75em', width: '100%', minWidth: 0 }}>
+            {(showActions || extraStats.length > 0 || watermarkText) && <div className="card-footer-bottom" style={{ display: 'grid', gridTemplateColumns: watermarkText ? 'minmax(0, 1fr) minmax(0, 45%)' : 'minmax(0, 1fr)', alignItems: 'end', columnGap: '0.75em', width: '100%', minWidth: 0 }}>
                 {extraStats.length ? <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35em', minWidth: 0 }}>
                     {actions}
                     <div className="card-footer-extra-stats text-secondary-foreground" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35em 0.75em', fontSize: '0.85em' }}>

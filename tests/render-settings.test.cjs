@@ -63,7 +63,7 @@ test('footer keeps time separate and keeps metrics on the watermark baseline', (
   assert.notEqual(actions.style.gap, '');
   assert.equal(bottom.style.display, 'grid');
   assert.equal(bottom.style.gridTemplateColumns, 'minmax(0, 1fr) minmax(0, 45%)');
-  assert.equal(bottom.style.alignItems, 'baseline');
+  assert.equal(bottom.style.alignItems, 'end');
   assert.equal(bottom.style.width, '100%');
   assert.equal(watermark.style.gridColumn, '2');
   assert.equal(watermark.style.justifySelf, 'end');
