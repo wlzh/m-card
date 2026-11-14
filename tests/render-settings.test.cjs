@@ -61,13 +61,25 @@ test('footer keeps time separate and keeps metrics on the watermark baseline', (
   assert.equal(actions.style.flexWrap, 'wrap');
   assert.equal(actions.style.flex, '1 1 auto');
   assert.notEqual(actions.style.gap, '');
-  assert.equal(bottom.style.display, 'flex');
-  assert.equal(bottom.style.flexWrap, 'wrap');
+  assert.equal(bottom.style.display, 'grid');
+  assert.equal(bottom.style.gridTemplateColumns, 'minmax(0, 1fr) minmax(0, 45%)');
   assert.equal(bottom.style.alignItems, 'baseline');
-  assert.equal(watermark.style.marginLeft, 'auto');
-  assert.equal(watermark.style.flex, '0 1 45%');
+  assert.equal(bottom.style.width, '100%');
+  assert.equal(watermark.style.gridColumn, '2');
+  assert.equal(watermark.style.justifySelf, 'end');
   assert.equal(watermark.style.minWidth, '0');
   assert.equal(watermark.querySelector('span').style.textOverflow, 'ellipsis');
+});
+test('wide media and metrics do not move the watermark off the card right edge', () => {
+  const doc = render({}, { images: ['/wide-1.png', '/wide-2.png', '/wide-3.png', '/wide-4.png'], replies: '1,234', shares: '56,789', likes: '123,456' });
+  const footer = doc.querySelector('.card-footer');
+  const bottom = doc.querySelector('.card-footer-bottom');
+  const watermark = doc.querySelector('.card-footer-watermark');
+  assert.equal(footer.style.width, '100%');
+  assert.equal(bottom.style.gridTemplateColumns, 'minmax(0, 1fr) minmax(0, 45%)');
+  assert.equal(watermark.style.gridColumn, '2');
+  assert.equal(watermark.style.justifySelf, 'end');
+  assert.equal(doc.querySelectorAll('img[alt^="Image "]').length, 4);
 });
 test('wide images and long metrics cannot set the card grid minimum width', () => {
   const doc = render({}, { images: ['/wide.png'], likes: '1,701' });
@@ -86,7 +98,7 @@ test('extended stats are opt-in and align the watermark with the last footer row
   assert.equal(hidden.querySelector('.card-footer-extra-stats'), null);
   const shown = render({ controls: { ...base, showExtraStats: true } }, tweet);
   assert.match(shown.querySelector('.card-footer-extra-stats').textContent, /76371 views.*570 bookmarks/);
-  assert.equal(shown.querySelector('.card-footer-bottom').style.alignItems, 'flex-end');
+  assert.equal(shown.querySelector('.card-footer-bottom').style.alignItems, 'end');
   assert.ok(shown.querySelector('.card-footer-watermark'));
 });
 test('watermark supports persisted custom value and off state independently of footer', () => {

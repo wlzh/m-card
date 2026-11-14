@@ -189,9 +189,9 @@ const CardLogo = ({ xConfig }) => {
 
 const Watermark = ({ text }: { text: string }) => {
     return (
-        <div className="card-footer-watermark flex justify-end" style={{ marginLeft: 'auto', paddingRight: '0.25em', flex: '0 1 45%', minWidth: 0 }}>
+        <div className="card-footer-watermark" style={{ gridColumn: 2, justifySelf: 'end', minWidth: 0, maxWidth: '100%', paddingRight: '0.25em', textAlign: 'right' }}>
             <span
-                className="whitespace-nowrap text-secondary-foreground select-none"
+                className="block whitespace-nowrap text-secondary-foreground select-none"
                 style={{ fontSize: '0.85em', fontWeight: 500, opacity: 0.55, overflow: 'hidden', textOverflow: 'ellipsis' }}
             >
                 {text}
@@ -318,11 +318,11 @@ const CardFooter = ({ xConfig, controls, watermarkText }: {
         ))}
     </div>;
     return (
-        <div className="card-footer" style={{ display: 'flex', flexDirection: 'column', gap: '0.55em', paddingTop: '0.75em', lineHeight: 1.35 }}>
+        <div className="card-footer" style={{ display: 'flex', flexDirection: 'column', gap: '0.55em', width: '100%', minWidth: 0, paddingTop: '0.75em', lineHeight: 1.35 }}>
             {showTime && <div className="card-footer-time text-secondary-foreground" style={{ whiteSpace: 'nowrap' }}>
                 <span>{formatTimestamp(time)}</span>
             </div>}
-            {(showActions || extraStats.length > 0 || watermarkText) && <div className="card-footer-bottom" style={{ display: 'flex', flexWrap: 'wrap', alignItems: extraStats.length ? 'flex-end' : 'baseline', justifyContent: 'space-between', gap: '0.75em', minWidth: 0 }}>
+            {(showActions || extraStats.length > 0 || watermarkText) && <div className="card-footer-bottom" style={{ display: 'grid', gridTemplateColumns: watermarkText ? 'minmax(0, 1fr) minmax(0, 45%)' : 'minmax(0, 1fr)', alignItems: extraStats.length ? 'end' : 'baseline', columnGap: '0.75em', width: '100%', minWidth: 0 }}>
                 {extraStats.length ? <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35em', minWidth: 0 }}>
                     {actions}
                     <div className="card-footer-extra-stats text-secondary-foreground" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35em 0.75em', fontSize: '0.85em' }}>
